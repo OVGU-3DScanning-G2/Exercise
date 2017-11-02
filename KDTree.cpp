@@ -29,9 +29,9 @@ bool sortByZvalue(const Point3d& p1, const Point3d& p2)
 KDTree::KDTree(std::vector<Point3d>& points, int dim){
 	if (points.size() == 1)
 	{
-		this->value = points[0];
-		this->left = NULL;
-		this->right = NULL;
+		value = points[0];
+		left = NULL;
+		right = NULL;
 	}
 	else {
 		switch (dim) {
@@ -48,9 +48,9 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 
 		if (points.size() == 2)
 		{
-			this->left = &KDTree(std::vector<Point3d>(points.begin(), points.begin() + 1), (dim + 1) % 3);
-			this->right = &KDTree(std::vector<Point3d>(points.begin() + 1, points.end()), (dim + 1) % 3);
-			this->value = points[0];
+			value = points[0];
+			left = new KDTree(*new std::vector<Point3d>(points.begin(), points.begin() + 1), (dim + 1) % 3);
+			right = new KDTree(*new std::vector<Point3d>(points.begin() + 1, points.end()), (dim + 1) % 3);
 		}
 		else
 		{
@@ -59,19 +59,19 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 			if (points.size() % 2 == 0)
 				half_size = half_size - 1;
 
-			std::vector<Point3d> split_lo(points.begin(), points.begin() + half_size + 1);
-			std::vector<Point3d> split_hi(points.begin() + half_size + 1, points.end());
+			std::vector<Point3d>* split_lo = new std::vector<Point3d>(points.begin(), points.begin() + half_size + 1);
+			std::vector<Point3d>* split_hi = new std::vector<Point3d>(points.begin() + half_size + 1, points.end());
 
-			this->left = &KDTree(split_lo, (dim + 1) % 3);
-			this->right = &KDTree(split_hi, (dim + 1) % 3);
-			this->value = points[half_size - 1];
+			value = points[half_size];
+			left = new KDTree(*split_lo, (dim + 1) % 3);
+			right = new KDTree(*split_hi, (dim + 1) % 3);
 		}
 
 		//std::cout << this->value.x << " " << this->value.y << " " << this->value.z << std::endl;
 	}
 }
 
-std::vector<Point3d> KDTree::abfrage(int laenge, Point3d& point, int dim)
+std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 {
 	std::vector<Point3d> res = std::vector<Point3d>();
 	res.push_back(point);

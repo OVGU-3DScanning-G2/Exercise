@@ -9,7 +9,7 @@
   #include "GLFW/glfw3.h" //inlcude the function definition
 #endif
 
-#include <gl/GLU.h>
+#include <GL/GLU.h>
 
 GLcamera::GLcamera()
 {

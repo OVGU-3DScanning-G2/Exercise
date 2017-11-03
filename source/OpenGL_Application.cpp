@@ -117,10 +117,13 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
   clock_t begin = clock();
 
   //loadFileXYZ("data/Stanford Dragon.xyz", points);
-  loadFileXYZ("data/cone.xyz", points);
+  loadFileXYZ("data/Stanford Dragon.xyz", points);
 
   clock_t end = clock();
   std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+  
+  //OK, we now compute the min and max coordinates for our bounding box
+  updateScene(points);
 
   //Load KD-Tree
   //----------------------------------------------------------------------------
@@ -135,7 +138,9 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
   //KDTree - Abfrage
   //----------------------------------------------------------------------------
   Point3d abfragePoint = points[points.size() / 2];
-  double abfrageLaenge = 0.06;
+
+  Point3d S = m_bbmax - m_bbmin;
+  double abfrageLaenge = S.x * 0.25;
 
   begin = clock();
 
@@ -144,9 +149,6 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
   end = clock();
   std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
   //----------------------------------------------------------------------------
-  
-  //OK, we now compute the min and max coordinates for our bounding box
-  updateScene(points);
 
   //Create an OpenGL window with GLFW
   GLFWwindow* window;
@@ -235,13 +237,8 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 	glPushMatrix();
 	glPushAttrib(GL_POLYGON_BIT);
 	glColor3ub(255, 255, 255);
-	Point3d S = m_bbmax - m_bbmin;
 	glTranslated(abfragePoint.x - abfrageLaenge, abfragePoint.y - abfrageLaenge, abfragePoint.z - abfrageLaenge);
-	glScaled(S.x * abfrageLaenge, S.y * abfrageLaenge, S.z * abfrageLaenge);
-
-//	Point3d S = m_bbmax - m_bbmin;
-//	glTranslated(m_bbmin.x, m_bbmin.y, m_bbmin.z);
-//	glScaled(S.x, S.y, S.z);
+	glScaled(abfrageLaenge * 2, abfrageLaenge * 2, abfrageLaenge * 2);
 
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //draw wire frame instead of filled quads
 	drawBox();

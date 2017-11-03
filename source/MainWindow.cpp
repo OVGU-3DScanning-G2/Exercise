@@ -10,7 +10,7 @@ MainWindow::MainWindow()
 {
   m_glWidget = new GLwidget();
   setCentralWidget(m_glWidget);
-  
+
   m_fileMenu = menuBar()->addMenu(tr("&File"));
   m_fileMenu->addAction("open",this,SLOT(openFile()));
 
@@ -26,7 +26,33 @@ void MainWindow::openFile()
   if (filenames.empty()) return;
 
   std::vector<Point3d> points;
+  int startDim = 0; // start Dimension for KDTree
+
+  clock_t begin = clock();
   loadFileXYZ(filenames.front().toLocal8Bit(), points);
+  clock_t end = clock();
+  std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+
+
+  begin = clock();
+  KDTree dataTree = KDTree(points, startDim);
+  end = clock();
+  std::cout << "Time needed to build kdTree: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+
+  //KDTree - Abfrage
+  //----------------------------------------------------------------------------
+  Point3d abfragePoint = points[points.size() / 2];
+  //Point3d S = m_bbmax - m_bbmin;
+  //double abfrageLaenge = S.x * 0.25;
+  double abfrageLaenge = 0.25;
+
+  begin = clock();
+  std::vector<Point3d> res = dataTree.abfrage(abfrageLaenge, abfragePoint, startDim);
+  end = clock();
+  std::cout << "Time time needed to process subsection: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+  //----------------------------------------------------------------------------
+
+
   m_glWidget->setPoints(points);
 }
 

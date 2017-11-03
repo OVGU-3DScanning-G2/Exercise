@@ -106,7 +106,7 @@ std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 		res.insert(res.end(), res2.begin(), res2.end());
 	}
 
-	if ((left == NULL && right == NULL) || checkLeft && checkRight)
+	if ((left == NULL && right == NULL) || (checkLeft && checkRight))
 	{
 		bool push = false;
 

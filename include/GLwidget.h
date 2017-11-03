@@ -29,6 +29,9 @@ class GLwidget : public QOpenGLWidget
     //access to data
     std::vector<Point3d>& points() { return m_points; } //return reference not the copy!
 
+    Point3d& minPoint() { return m_bbmin; }
+    Point3d& maxPoint() { return m_bbmax; }
+
     //return camera
     GLcamera& camera(){return m_camera;}
 
@@ -44,13 +47,14 @@ class GLwidget : public QOpenGLWidget
     void drawBackground();      ///< draws the scene background
 
 
-    GLfloat   m_point_size = 3;
+    GLfloat   m_point_size = 2;
 
     std::vector<Point3d> m_points;    //point data
 
     QPoint               m_mouseLastPos;  //last mouse position clicked
 
     GLcamera  m_camera;         //virtual camera
+    //TODO: where do they come from?
     Point3d   m_bbmin,m_bbmax;  //bounding box coordinates
     Point3d   m_sceneCenter;    //center of the scene
     double    m_sceneRadius;    //radius of the scene

@@ -42,9 +42,14 @@ void MainWindow::openFile()
   //KDTree - Abfrage
   //----------------------------------------------------------------------------
   Point3d abfragePoint = points[points.size() / 2];
-  //Point3d S = m_bbmax - m_bbmin;
-  //double abfrageLaenge = S.x * 0.25;
-  double abfrageLaenge = 1;
+  Point3d S = m_glWidget->maxPoint() - m_glWidget->minPoint();
+  //TODO: Why is S = 0 0 0 ?
+  double abfrageLaenge = S.x * 0.25;
+  //TODO: WHY????
+  //double abfrageLaenge = 1;
+
+  std::cout << "abgfrageLaenge: " << abfrageLaenge << std::endl
+            << "S:" << S.x << " " << S.y << " " << S.z << std::endl;
 
   begin = clock();
   std::vector<Point3d> res = dataTree.abfrage(abfrageLaenge, abfragePoint, startDim);
@@ -53,7 +58,7 @@ void MainWindow::openFile()
   //----------------------------------------------------------------------------
 
   m_glWidget->setPoints(points);
-  m_glWidget->drawPoints(res, 1.5, 100, 255, 255);
+  m_glWidget->drawPoints(res, 4, 255, 0, 0);
 }
 
 void MainWindow::changeProjection()

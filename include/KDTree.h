@@ -1,5 +1,5 @@
 #include <vector>
-#include "Point3d.h"
+#include "include/Point3d.h"
 
 class KDTree
 {

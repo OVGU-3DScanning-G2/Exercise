@@ -44,7 +44,7 @@ void MainWindow::openFile()
   Point3d abfragePoint = points[points.size() / 2];
   //Point3d S = m_bbmax - m_bbmin;
   //double abfrageLaenge = S.x * 0.25;
-  double abfrageLaenge = 0.25;
+  double abfrageLaenge = 1;
 
   begin = clock();
   std::vector<Point3d> res = dataTree.abfrage(abfrageLaenge, abfragePoint, startDim);
@@ -52,8 +52,8 @@ void MainWindow::openFile()
   std::cout << "Time time needed to process subsection: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
   //----------------------------------------------------------------------------
 
-
   m_glWidget->setPoints(points);
+  m_glWidget->drawPoints(res, 1.5, 100, 255, 255);
 }
 
 void MainWindow::changeProjection()

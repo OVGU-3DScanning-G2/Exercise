@@ -18,6 +18,8 @@ class GLwidget : public QOpenGLWidget
     void resizeGL(int w, int h);
     void paintGL();
 
+    void drawPoints(std::vector<Point3d>& points, double size = 1, GLbyte color_r = 255, GLbyte color_g = 255, GLbyte color_b = 255);
+
     //updates size of the scene
     void updateScene();
 
@@ -40,6 +42,9 @@ class GLwidget : public QOpenGLWidget
 
     void drawCoordinateAxes();  ///< draws the coordinate system
     void drawBackground();      ///< draws the scene background
+
+
+    GLfloat   m_point_size = 3;
 
     std::vector<Point3d> m_points;    //point data
 

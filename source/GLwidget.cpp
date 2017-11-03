@@ -33,15 +33,13 @@ void GLwidget::paintGL()
   { /* Drawing Points with VertexArrays */
     glEnableClientState(GL_VERTEX_ARRAY);
 
-    glPointSize(3);
+    glPointSize(m_point_size);
     glColor3ub(225, 225, 255);
     glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &m_points[0]);
     glDrawArrays(GL_POINTS, 0, (unsigned int)m_points.size());
 
     glDisableClientState(GL_VERTEX_ARRAY);
   }
-
-
 
   //draw coordinate frame
   drawCoordinateAxes();
@@ -79,6 +77,23 @@ void GLwidget::paintGL()
   //  gluDeleteQuadric(quad);
   //glPopMatrix();
 
+  update();
+}
+
+void GLwidget::drawPoints(std::vector<Point3d>& points, double size, GLbyte color_r, GLbyte color_g, GLbyte color_b){
+  //Draw pointclouds
+  if (!points.empty())
+  {
+  	glEnable(GL_DEPTH_TEST);
+    glEnableClientState(GL_VERTEX_ARRAY);
+
+    glPointSize(m_point_size*size);
+    glColor3ub(color_r, color_g, color_b);
+    glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &points[0]);
+    glDrawArrays(GL_POINTS, 0, (unsigned int)points.size());
+
+    glDisableClientState(GL_VERTEX_ARRAY);
+  }
   update();
 }
 

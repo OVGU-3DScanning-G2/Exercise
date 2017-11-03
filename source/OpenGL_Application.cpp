@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
   clock_t begin = clock();
 
   //loadFileXYZ("data/Stanford Dragon.xyz", points);
-  loadFileXYZ("data/Stanford Dragon.xyz", points);
+  loadFileXYZ("data/cone.xyz", points);
 
   clock_t end = clock();
   std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
@@ -329,7 +329,7 @@ void loadFileXYZ(const char* filename, std::vector<Point3d>& points)
     }
     else
     {
-      points.push_back(point); //add the current point to our point vector
+      points.emplace_back(point); //add the current point to our point vector
     }
   }
 

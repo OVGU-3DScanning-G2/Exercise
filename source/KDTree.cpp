@@ -121,7 +121,7 @@ std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 			push = true;
 
 		if(push)
-			res.push_back(this->value);
+			res.emplace_back(this->value);
 	}
 		
 	return res;

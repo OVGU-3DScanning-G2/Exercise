@@ -126,3 +126,8 @@ std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 		
 	return res;
 }
+
+Point3d KDTree::abfragePoint(Point3d& point)
+{
+	return Point3d();
+}

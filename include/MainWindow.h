@@ -5,7 +5,7 @@
 #include "GLwidget.h"
 #include "Point3d.h"
 
-#include "../Exercise_1/KDTree.h"
+#include "KDTree.h"
 
 
 class MainWindow : public QMainWindow

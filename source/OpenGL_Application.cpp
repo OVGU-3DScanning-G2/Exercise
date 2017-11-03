@@ -20,9 +20,9 @@
 #include "KDTree.h"
 
 //Normally compiler & linker options are set in the project file and not in the source code
-//Its just here to show what dependencies are needed 
+//Its just here to show what dependencies are needed
 #pragma comment(lib, "opengl32.lib")     //link against standard MS Windows OpenGL-Library
-#pragma comment(lib, "glu32.lib")        //link to some standard OpenGL convenience functions 
+#pragma comment(lib, "glu32.lib")        //link to some standard OpenGL convenience functions
 #pragma comment(lib, "GLFW/glfw3.lib")   //link against the the GLFW OpenGL SDK
 
 //using namespace std; //everything what is in the "Standard" C++ namespace, so the "std::" prefix can be avoided
@@ -87,7 +87,7 @@ void mouse_move_event(GLFWwindow* window, double currposX, double currposY)
   int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
   //compute object rotation wenn the left mouse button is pressed
   if (state == GLFW_PRESS) //if the left mouse button is pressed while it is moved then we rotate
-  { 
+  {
     m_camera.rotate((int)lastposX,(int)lastposY,(int)currposX,(int)currposY);
 
     //the current mouse position is the last mouse position for the next interaction
@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
   clock_t end = clock();
   std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
-  
+
   //OK, we now compute the min and max coordinates for our bounding box
   updateScene(points);
 
@@ -152,7 +152,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
   //Create an OpenGL window with GLFW
   GLFWwindow* window;
-  
+
   /* Initialize the library */
   if (!glfwInit())
   {
@@ -160,7 +160,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
     getc(stdin);
     return -1;
   }
-  
+
   /* Create a windowed mode window and its OpenGL context */
   window = glfwCreateWindow(1280, 720, "My OpenGL Window", NULL, NULL);
   if (!window)
@@ -181,7 +181,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
   //Prepare our virtual camera
   glfwGetFramebufferSize(window, &m_windowWidth, &m_windowHeight);
-  
+
   //Initialize Camera
   m_camera.setWindowSize(m_windowWidth, m_windowHeight);    //setup window parameters
   m_camera.initializeCamera(m_sceneCenter, m_sceneRadius);  //set the camera outside the scene
@@ -208,7 +208,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
       glColor3ub(0, 255, 0);
       glEnableClientState(GL_VERTEX_ARRAY); //enable data upload to GPU
       glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &points[0]);
-      
+
       //draw point cloud
       glDrawArrays(GL_POINTS, 0, (unsigned int)points.size());
       glDisableClientState(GL_VERTEX_ARRAY);  //disable data upload to GPU
@@ -271,14 +271,14 @@ void updateScene(const std::vector<Point3d>& points)
     m_bbmax.x = 0;  m_bbmax.y = 0;  m_bbmax.z = 0;
     return;
   }
-  
+
   //We now compute the min and max coordinates for our bounding box
   m_bbmin = points.front(); //initialize min with the first point
   m_bbmax = points.front(); //initialize max with the first point
 
   for (unsigned int i = 0; i < points.size(); ++i)
   {
-    const Point3d& pt = points[i]; //do not copy but get a reference to the i-th point in the vector  
+    const Point3d& pt = points[i]; //do not copy but get a reference to the i-th point in the vector
     if (pt.x < m_bbmin.x) m_bbmin.x = pt.x;
     else if (pt.x > m_bbmax.x) m_bbmax.x = pt.x;
 

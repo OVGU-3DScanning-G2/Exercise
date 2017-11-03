@@ -4,26 +4,17 @@
 
 bool sortByXvalue(const Point3d& p1, const Point3d& p2)
 {
-	if (p1.x < p2.x)
-		return true;
-	else
-		return false;
+	return p1.x < p2.x;
 }
 
 bool sortByYvalue(const Point3d& p1, const Point3d& p2)
 {
-	if (p1.y < p2.y)
-		return true;
-	else
-		return false;
+	return p1.y < p2.y;
 }
 
 bool sortByZvalue(const Point3d& p1, const Point3d& p2)
 {
-	if (p1.z < p2.z)
-		return true;
-	else
-		return false;
+	return p1.z < p2.z;
 }
 
 KDTree::KDTree(std::vector<Point3d>& points, int dim){
@@ -34,6 +25,7 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 		right = NULL;
 	}
 	else {
+		// sort points
 		switch (dim) {
 		case 0:
 			std::sort(points.begin(), points.end(), sortByXvalue);
@@ -46,6 +38,8 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 			break;
 		}
 
+		// find median point
+		//  should be point in center of array after sorting
 		if (points.size() == 2)
 		{
 			value = points[0];
@@ -123,7 +117,7 @@ std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 		if(push)
 			res.emplace_back(this->value);
 	}
-		
+
 	return res;
 }
 

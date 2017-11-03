@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
   clock_t begin = clock();
 
   //loadFileXYZ("data/Stanford Dragon.xyz", points);
-  loadFileXYZ("data/cone.xyz", points);
+  loadFileXYZ("data/Stanford Dragon.xyz", points);
 
   clock_t end = clock();
   std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
@@ -135,8 +135,14 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
   //KDTree - Abfrage
   //----------------------------------------------------------------------------
   Point3d abfragePoint = points[points.size() / 2];
-  double abfrageLaenge = 0.5;
+  double abfrageLaenge = 0.06;
+
+  begin = clock();
+
   std::vector<Point3d> res = data.abfrage(abfrageLaenge, abfragePoint, startDim);
+
+  end = clock();
+  std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
   //----------------------------------------------------------------------------
   
   //OK, we now compute the min and max coordinates for our bounding box

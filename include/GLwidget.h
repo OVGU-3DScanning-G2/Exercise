@@ -22,7 +22,10 @@ class GLwidget : public QOpenGLWidget
     void updateScene();
 
     //points to draw
-    std::vector<Point3d>& points(){return m_points;}
+    void setPoints    (std::vector<Point3d>& points)   { m_points = points; updateScene(); }
+
+    //access to data
+    std::vector<Point3d>& points() { return m_points; } //return reference not the copy!
 
     //return camera
     GLcamera& camera(){return m_camera;}
@@ -32,9 +35,14 @@ class GLwidget : public QOpenGLWidget
     void  mouseMoveEvent (QMouseEvent * e);  ///<
     void  wheelEvent     (QWheelEvent * e);  ///<
 
-    void drawBox();
+    void drawBox();             ///< draws a unit box
+    void drawCircle();          ///< draws a unit circle
 
-    std::vector<Point3d> m_points;        //point data
+    void drawCoordinateAxes();  ///< draws the coordinate system
+    void drawBackground();      ///< draws the scene background
+
+    std::vector<Point3d> m_points;    //point data
+
     QPoint               m_mouseLastPos;  //last mouse position clicked
 
     GLcamera  m_camera;         //virtual camera

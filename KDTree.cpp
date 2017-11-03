@@ -74,7 +74,6 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 {
 	std::vector<Point3d> res = std::vector<Point3d>();
-	res.push_back(point);
 
 	bool checkLeft = false;
 	bool checkRight = false;
@@ -82,39 +81,60 @@ std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 	switch (dim)
 	{
 	case 0:
-		if (this->value.x >= point.x - laenge)
+		if (value.x >= point.x - laenge)
 			checkLeft = true;
-		if (this->value.x < point.x + laenge)
+		if (value.x <= point.x + laenge)
 			checkRight = true;
 		break;
 	case 1:
-		if (this->value.y >= point.y - laenge)
+		if (value.y >= point.y - laenge)
 			checkLeft = true;
-		if (this->value.y < point.y + laenge)
+		if (value.y <= point.y + laenge)
 			checkRight = true;
 		break;
 	case 2:
-		if (this->value.z >= point.z - laenge)
+		if (value.z >= point.z - laenge)
 			checkLeft = true;
-		if (this->value.z < point.z + laenge)
+		if (value.z <= point.z + laenge)
 			checkRight = true;
 		break;
 	}
 
-	if (checkLeft && this->left != NULL)
+	if (checkLeft && left != NULL)
 	{
-		std::vector<Point3d> res2 = this->left->abfrage(laenge, point, (dim + 1) % 3);
+		std::vector<Point3d> res2 = left->abfrage(laenge, point, (dim + 1) % 3);
 		res.insert(res.end(), res2.begin(), res2.end());
 	}
 
-	if (checkRight && this->right != NULL)
+	if (checkRight && right != NULL)
 	{
-		std::vector<Point3d> res2 = this->right->abfrage(laenge, point, (dim + 1) % 3);
+		std::vector<Point3d> res2 = right->abfrage(laenge, point, (dim + 1) % 3);
 		res.insert(res.end(), res2.begin(), res2.end());
 	}
 
-	if (this->left == NULL && this->right == NULL && checkLeft && checkRight)
-		res.push_back(this->value);
+	if (left == NULL && right == NULL)
+	{
+		bool push = false;
+
+		switch (dim)
+		{
+		case 0:
+			if (value.x >= point.x - laenge && value.x <= point.x + laenge)
+				push = true;
+			break;
+		case 1:
+			if (value.y >= point.y - laenge && value.y <= point.y + laenge)
+				push = true;
+			break;
+		case 2:
+			if (value.z >= point.z - laenge && value.z <= point.z + laenge)
+				push = true;
+			break;
+		}
+
+		if(push)
+			res.push_back(this->value);
+	}
 		
 	return res;
 }

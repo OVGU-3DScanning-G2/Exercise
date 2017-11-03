@@ -13,7 +13,7 @@ void GLwidget::resizeGL(int w, int h)
 {
   glViewport(0,0,w,h);
 
-  m_camera.setWindowSize(w,h); 
+  m_camera.setWindowSize(w,h);
   m_camera.updateProjection(); //adjust projection to new window size
 }
 
@@ -82,14 +82,14 @@ void GLwidget::paintGL()
   update();
 }
 
-void GLwidget::mousePressEvent(QMouseEvent * e)  ///< 
+void GLwidget::mousePressEvent(QMouseEvent * e)  ///<
 {
   if (e->buttons() == Qt::LeftButton)
     m_mouseLastPos = e->pos();
 }
 
-void GLwidget::mouseMoveEvent(QMouseEvent * e)   ///< 
-{ 
+void GLwidget::mouseMoveEvent(QMouseEvent * e)   ///<
+{
   //std::cout << e->pos().x() << "," << e->pos().y()<<std::endl;
 
   if (e->buttons() != Qt::LeftButton){ return; }
@@ -99,7 +99,7 @@ void GLwidget::mouseMoveEvent(QMouseEvent * e)   ///<
   if ((*e).y()<0 || (*e).y() >= height()){ return; }
 
   const QPoint& mouseCurrentPos(e->pos());
-  
+
   if (m_mouseLastPos == mouseCurrentPos) return;
 
   makeCurrent();
@@ -116,7 +116,7 @@ void GLwidget::wheelEvent(QWheelEvent * e)
   if (e->orientation() != Qt::Vertical) return;
 
   const double factor = e->delta()<0 ? 1.1 : 0.9;
-  
+
   makeCurrent();
   m_camera.zoom(factor);
 }
@@ -138,7 +138,7 @@ void GLwidget::updateScene()
 
   for (unsigned int i = 0; i < m_points.size(); ++i)
   {
-    const Point3d& pt = m_points[i]; //do not copy but get a reference to the i-th point in the vector  
+    const Point3d& pt = m_points[i]; //do not copy but get a reference to the i-th point in the vector
     if (pt.x < minPoint.x) minPoint.x = pt.x;
     else if (pt.x > maxPoint.x) maxPoint.x = pt.x;
 
@@ -266,7 +266,7 @@ void GLwidget::drawCoordinateAxes()
 //------------------------------------------------------------------------------
 /** draws a static permanent 2d color gradient.
     Drawing static background means that we draw a 2D rectangle, which is not
-    influenced by scene rotation and by the camera projection. 
+    influenced by scene rotation and by the camera projection.
     Basically we just want to draw a 2D texture/image.
 */
 //------------------------------------------------------------------------------

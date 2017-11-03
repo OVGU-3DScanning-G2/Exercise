@@ -13,7 +13,7 @@
 #define GLFW_INCLUDE_GLU
 #include "GLFW/glfw3.h" //inlcude the function definition
 
-#include <gl/GLU.h>
+#include <GL/GLU.h>
 
 #include "GLcamera.h"
 #include "Point3d.h"
@@ -235,8 +235,14 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 	glPushMatrix();
 	glPushAttrib(GL_POLYGON_BIT);
 	glColor3ub(255, 255, 255);
+	Point3d S = m_bbmax - m_bbmin;
 	glTranslated(abfragePoint.x - abfrageLaenge, abfragePoint.y - abfrageLaenge, abfragePoint.z - abfrageLaenge);
-	glScaled(abfrageLaenge * 2, abfrageLaenge * 2, abfrageLaenge * 2);
+	glScaled(S.x * abfrageLaenge, S.y * abfrageLaenge, S.z * abfrageLaenge);
+
+//	Point3d S = m_bbmax - m_bbmin;
+//	glTranslated(m_bbmin.x, m_bbmin.y, m_bbmin.z);
+//	glScaled(S.x, S.y, S.z);
+
 	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //draw wire frame instead of filled quads
 	drawBox();
 	glPopAttrib();

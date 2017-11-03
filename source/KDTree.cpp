@@ -25,6 +25,7 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 		right = NULL;
 	}
 	else {
+		// sort points
 		switch (dim) {
 		case 0:
 			std::sort(points.begin(), points.end(), sortByXvalue);
@@ -37,6 +38,8 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 			break;
 		}
 
+		// find median point
+		//  should be point in center of array after sorting
 		if (points.size() == 2)
 		{
 			value = points[0];
@@ -114,7 +117,7 @@ std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 		if(push)
 			res.emplace_back(this->value);
 	}
-		
+
 	return res;
 }
 

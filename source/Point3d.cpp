@@ -1,5 +1,5 @@
 #include <cmath>        //for standard C/C++ math functions
-#include "Point3d.h" 
+#include "include/Point3d.h" 
 
 //custom operator that enables the + operation of two points (pt3 = pt1 + pt2)
 Point3d Point3d::operator + (const Point3d& p2) const

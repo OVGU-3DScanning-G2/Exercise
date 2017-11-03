@@ -15,9 +15,19 @@ TARGET = 3dS_01_2
 TEMPLATE = app
 
 
-SOURCES += $$files(source/*.cpp)
-SOURCES += $$files(Exercise_1/*.cpp)
+#SOURCES += $$files(source/*.cpp)
 
-HEADERS  += $$files(include/*.h)
-HEADERS += $$files(Exercise_1/*.h)
+SOURCES += $$files(source/Point3d.cpp)
+SOURCES += $$files(source/KDTree.cpp)
+SOURCES += $$files(source/GLcamera.cpp)
+SOURCES += $$files(source/GLwidget.cpp)
+SOURCES += $$files(source/MainWindow.cpp)
+SOURCES += $$files(source/OpenGL_App_QT.cpp)
 
+
+#HEADERS  += $$files(include/*.h)
+HEADERS  += $$files(include/GLcamera.h)
+HEADERS  += $$files(include/GLwidget.h)
+HEADERS  += $$files(include/KDTree.h)
+HEADERS  += $$files(include/MainWindow.h)
+HEADERS  += $$files(include/Point3d.h)

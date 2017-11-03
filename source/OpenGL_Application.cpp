@@ -13,7 +13,7 @@
 #define GLFW_INCLUDE_GLU
 #include "GLFW/glfw3.h" //inlcude the function definition
 
-#include <GL/GLU.h>
+#include <GL/glu.h>
 
 #include "GLcamera.h"
 #include "Point3d.h"

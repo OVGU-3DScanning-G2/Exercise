@@ -4,26 +4,17 @@
 
 bool sortByXvalue(const Point3d& p1, const Point3d& p2)
 {
-	if (p1.x < p2.x)
-		return true;
-	else
-		return false;
+	return p1.x < p2.x;
 }
 
 bool sortByYvalue(const Point3d& p1, const Point3d& p2)
 {
-	if (p1.y < p2.y)
-		return true;
-	else
-		return false;
+	return p1.y < p2.y;
 }
 
 bool sortByZvalue(const Point3d& p1, const Point3d& p2)
 {
-	if (p1.z < p2.z)
-		return true;
-	else
-		return false;
+	return p1.z < p2.z;
 }
 
 KDTree::KDTree(std::vector<Point3d>& points, int dim){
@@ -49,7 +40,7 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 		if (points.size() == 2)
 		{
 			value = points[0];
-			left = new KDTree(*new std::vector<Point3d>(points.begin(), points.begin() + 1), (dim + 1) % 3);
+			left = NULL;
 			right = new KDTree(*new std::vector<Point3d>(points.begin() + 1, points.end()), (dim + 1) % 3);
 		}
 		else
@@ -59,7 +50,7 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 			if (points.size() % 2 == 0)
 				half_size = half_size - 1;
 
-			std::vector<Point3d>* split_lo = new std::vector<Point3d>(points.begin(), points.begin() + half_size + 1);
+			std::vector<Point3d>* split_lo = new std::vector<Point3d>(points.begin(), points.begin() + half_size);
 			std::vector<Point3d>* split_hi = new std::vector<Point3d>(points.begin() + half_size + 1, points.end());
 
 			value = points[half_size];
@@ -112,7 +103,7 @@ std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 		res.insert(res.end(), res2.begin(), res2.end());
 	}
 
-	if (left == NULL && right == NULL)
+	if ((left == NULL && right == NULL) || checkLeft && checkRight)
 	{
 		bool push = false;
 
@@ -127,7 +118,49 @@ std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 	return res;
 }
 
-Point3d KDTree::abfragePoint(Point3d& point)
+Point3d KDTree::abfragePoint(Point3d& point, int dim)
 {
+	/*
+	if (left == NULL && right == NULL)
+	{
+		return value;
+	}
+	else
+	{
+		bool checkLeft = false;
+		bool checkRight = false;
+
+		switch (dim)
+		{
+		case 0:
+			if (value.x >= point.x)
+				checkLeft = true;
+			if (value.x < point.x)
+				checkRight = true;
+			break;
+		case 1:
+			if (value.y >= point.y)
+				checkLeft = true;
+			if (value.y < point.y)
+				checkRight = true;
+			break;
+		case 2:
+			if (value.z >= point.z)
+				checkLeft = true;
+			if (value.z < point.z)
+				checkRight = true;
+			break;
+		}
+
+		if (checkLeft)
+		{
+			return left->abfragePoint(point, (dim + 1) % 3);
+		}
+		else
+		{
+			return right->abfragePoint(point, (dim + 1) % 3);
+		}
+	}*/
+
 	return Point3d();
 }

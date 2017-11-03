@@ -117,7 +117,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
   clock_t begin = clock();
 
   //loadFileXYZ("data/Stanford Dragon.xyz", points);
-  loadFileXYZ("data/Stanford Horse.xyz", points);
+  loadFileXYZ("data/cone.xyz", points);
 
   clock_t end = clock();
   std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
@@ -145,6 +145,9 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
   begin = clock();
 
   std::vector<Point3d> res = data.abfrage(abfrageLaenge, abfragePoint, startDim);
+  //Point3d resPoint = data.abfragePoint(abfragePoint, startDim);
+
+  //std::cout << "X: " << resPoint.x << " Y: " << resPoint.y << " Z: " << resPoint.z << std::endl;
 
   end = clock();
   std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;

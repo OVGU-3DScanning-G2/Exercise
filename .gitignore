@@ -5,3 +5,4 @@ moc_*
 .qmake.stash
 *.pro.user
 3dS_01_2
+3DScan_Qt

@@ -223,7 +223,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
 	glEnable(GL_DEPTH_TEST);
 
-	if (!points.empty())
+	if (!res.empty())
 	{ /* Drawing Points with VertexArrays */
 		glColor3ub(255, 0, 0);
 		glEnableClientState(GL_VERTEX_ARRAY); //enable data upload to GPU

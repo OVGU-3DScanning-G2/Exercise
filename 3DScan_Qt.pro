@@ -11,7 +11,7 @@ QT       = core gui opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = 3dS_01_2
+TARGET = 3DScan_Qt
 TEMPLATE = app
 
 

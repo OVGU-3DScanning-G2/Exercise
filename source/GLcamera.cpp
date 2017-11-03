@@ -1,10 +1,10 @@
-#include "GLcamera.h"
+#include "inlcude/GLcamera.h"
 
 #include <cmath>
 
 #ifdef SET_QT_INCLUDE_GL //define is manually set in the VS-Studio Setting ("preprocessor defines")
   #include <QtOpenGL\qgl.h>
-#else 
+#else
   #define GLFW_INCLUDE_GLU
   #include "GLFW/glfw3.h" //inlcude the function definition
 #endif
@@ -18,10 +18,10 @@ GLcamera::GLcamera()
 
 void GLcamera::initializeCamera(Point3d rotationCenter, double sceneRadius)
 {
-  m_rotationCenter = rotationCenter; 
-  m_sceneRadius = sceneRadius; 
+  m_rotationCenter = rotationCenter;
+  m_sceneRadius = sceneRadius;
   m_zoomFactor = 1;
-  
+
   glMatrixMode(GL_MODELVIEW);
   glLoadIdentity();
 
@@ -47,7 +47,7 @@ void GLcamera::updateProjection()
     double camAngle = m_angleFOV / m_zoomFactor;
     if (camAngle < 0.25) { camAngle = 0.25;  m_zoomFactor = m_angleFOV / 0.25; }
     else if (camAngle > 120.0) { camAngle = 120.0;  m_zoomFactor = m_angleFOV / 120.0; }
-        
+
     gluPerspective(camAngle, aspect, 0.001, m_zFar);
   }
   else
@@ -57,7 +57,7 @@ void GLcamera::updateProjection()
     if (m_winWidth <= m_winHeight) glOrtho(-range, range, -range / aspect, range / aspect, 0.0001, m_zFar);
     else                           glOrtho(-range*aspect, range*aspect, -range, range, 0.0001, m_zFar);
   }
-  
+
   glMatrixMode(GL_MODELVIEW);
 }
 
@@ -92,14 +92,14 @@ void GLcamera::rotate(int x1, int y1, int x2, int y2)
   normalizeVector(lastPos3d); //make unit normal vector
   normalizeVector(currPos3d); //make unit normal vector
 
-  //the current mouse interaction results in this 3d rotation in camera space (unit sphere) 
+  //the current mouse interaction results in this 3d rotation in camera space (unit sphere)
   Point3d axisCS = crossProduct(lastPos3d, currPos3d);
   double  angle = acos(dotProduct(lastPos3d, currPos3d));
 
   //The current rotation now needs to be multiplied with the global world rotation/transform
   //Therefore we ask OpenGL to give ous the global scene transform (which is stored in the Modelview-Matrix)
   double M[16];
-  glGetDoublev(GL_MODELVIEW_MATRIX, M); //note that OpenGL-Matrices are column-major 
+  glGetDoublev(GL_MODELVIEW_MATRIX, M); //note that OpenGL-Matrices are column-major
 
   //We now multiply our current rotation axis (in camera space) with the global world transform Matrix
   //and get a new rotation axis which is now in the frame of the global transform
@@ -113,6 +113,6 @@ void GLcamera::rotate(int x1, int y1, int x2, int y2)
   glTranslated(m_rotationCenter.x, m_rotationCenter.y, m_rotationCenter.z);
   //now we rotate the frame about our own origin/rotation center
   glRotated(2*angle * 180.0 / 3.1415, axisWS.x, axisWS.y, axisWS.z);
-  //and finally we "move" the frame origin back 
+  //and finally we "move" the frame origin back
   glTranslated(-m_rotationCenter.x, -m_rotationCenter.y, -m_rotationCenter.z);
 }

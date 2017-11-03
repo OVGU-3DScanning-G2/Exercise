@@ -116,21 +116,9 @@ std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 	{
 		bool push = false;
 
-		switch (dim)
-		{
-		case 0:
-			if (value.x >= point.x - laenge && value.x <= point.x + laenge)
-				push = true;
-			break;
-		case 1:
-			if (value.y >= point.y - laenge && value.y <= point.y + laenge)
-				push = true;
-			break;
-		case 2:
-			if (value.z >= point.z - laenge && value.z <= point.z + laenge)
-				push = true;
-			break;
-		}
+		if (value.x >= point.x - laenge && value.x <= point.x + laenge && value.y >= point.y - laenge && value.y <= point.y + laenge
+			&& value.z >= point.z - laenge && value.z <= point.z + laenge)
+			push = true;
 
 		if(push)
 			res.push_back(this->value);

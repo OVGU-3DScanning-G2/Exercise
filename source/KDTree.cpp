@@ -17,6 +17,12 @@ bool sortByZvalue(const Point3d& p1, const Point3d& p2)
 	return p1.z < p2.z;
 }
 
+KDTree::KDTree()
+{
+	left = NULL;
+	right = NULL;
+}
+
 KDTree::KDTree(std::vector<Point3d>& points, int dim){
 	if (points.size() == 1)
 	{

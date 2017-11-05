@@ -41,6 +41,15 @@ GLcamera m_camera;
 Point3d  m_sceneCenter;   //scene center and rotation point
 double   m_sceneRadius = 0; //scene radius
 Point3d  m_bbmin, m_bbmax;//bounding box
+//Own Variables
+//-----------------------------------------
+std::vector<Point3d> res;
+std::vector<Point3d> points;
+KDTree data;
+double abfrageLaenge;
+int startDim = 0;
+Point3d& abfragePoint = Point3d(0, 0, 0);
+//-----------------------------------------
 
 int m_windowWidth = 0;
 int m_windowHeight = 0;
@@ -63,6 +72,30 @@ void resizeGL(GLFWwindow* window, int width, int height)
 
 	m_camera.setWindowSize(width, height);
 	m_camera.updateProjection(); //adjust projection to new window size
+}
+
+void spaceKey_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+{
+	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+	{
+		//KDTree - Abfrage
+		//----------------------------------------------------------------------------
+		abfragePoint = points[(std::rand() % (points.size() + 1))];
+
+		Point3d S = m_bbmax - m_bbmin;
+		abfrageLaenge = S.x * 0.25;
+
+		clock_t begin = clock();
+
+		res = data.abfrage(abfrageLaenge, abfragePoint, startDim);
+		//Point3d resPoint = data.abfragePoint(abfragePoint, startDim);
+
+		//std::cout << "X: " << resPoint.x << " Y: " << resPoint.y << " Z: " << resPoint.z << std::endl;
+
+		clock_t end = clock();
+		std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+		//----------------------------------------------------------------------------
+	}
 }
 
 //This function is called, wenn a mouse button is pressed
@@ -110,10 +143,6 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
 	std::cout << "Hello world! \n This is my console window" << std::endl;
 
-	//prepare storage for our point cloud
-	std::vector<Point3d> points;
-	int startDim = 0;
-
 	//try to load point cloud data from file
 	clock_t begin = clock();
 
@@ -130,28 +159,10 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 	//----------------------------------------------------------------------------
 	begin = clock();
 
-	KDTree data = KDTree(points, startDim);
+	data = KDTree(points, startDim);
 
 	end = clock();
 	std::cout << "Time needed to build kdTree: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
-	//----------------------------------------------------------------------------
-
-	//KDTree - Abfrage
-	//----------------------------------------------------------------------------
-	Point3d abfragePoint = points[points.size() / 2];
-
-	Point3d S = m_bbmax - m_bbmin;
-	double abfrageLaenge = S.x * 0.25;
-
-	begin = clock();
-
-	std::vector<Point3d> res = data.abfrage(abfrageLaenge, abfragePoint, startDim);
-	//Point3d resPoint = data.abfragePoint(abfragePoint, startDim);
-
-	//std::cout << "X: " << resPoint.x << " Y: " << resPoint.y << " Z: " << resPoint.z << std::endl;
-
-	end = clock();
-	std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
 	//----------------------------------------------------------------------------
 
 	//Create an OpenGL window with GLFW
@@ -175,6 +186,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 	}
 
 	//setting up events/callbacks
+	glfwSetKeyCallback(window, spaceKey_callback);
 	glfwSetFramebufferSizeCallback(window, resizeGL);
 	glfwSetCursorPosCallback(window, mouse_move_event);
 	glfwSetMouseButtonCallback(window, mouse_press_event);
@@ -214,16 +226,19 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
 		//draw bounding box for Abfrage
 		//----------------------------------------------------------------------------
-		glPushMatrix();
-		glPushAttrib(GL_POLYGON_BIT);
-		glColor3ub(255, 255, 255);
-		glTranslated(abfragePoint.x - abfrageLaenge, abfragePoint.y - abfrageLaenge, abfragePoint.z - abfrageLaenge);
-		glScaled(abfrageLaenge * 2, abfrageLaenge * 2, abfrageLaenge * 2);
+		if (abfragePoint.x != 0 || abfragePoint.y != 0 || abfragePoint.z != 0)
+		{
+			glPushMatrix();
+			glPushAttrib(GL_POLYGON_BIT);
+			glColor3ub(255, 255, 255);
+			glTranslated(abfragePoint.x - abfrageLaenge, abfragePoint.y - abfrageLaenge, abfragePoint.z - abfrageLaenge);
+			glScaled(abfrageLaenge * 2, abfrageLaenge * 2, abfrageLaenge * 2);
 
-		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //draw wire frame instead of filled quads
-		drawBox();
-		glPopAttrib();
-		glPopMatrix();
+			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //draw wire frame instead of filled quads
+			drawBox();
+			glPopAttrib();
+			glPopMatrix();
+		}
 		//----------------------------------------------------------------------------
 
 		//draw coordinate axes

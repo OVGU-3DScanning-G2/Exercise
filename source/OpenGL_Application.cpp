@@ -30,6 +30,7 @@
 void updateScene(const std::vector<Point3d>& points);
 void loadFileXYZ(const char* filename, std::vector<Point3d>& points); //declare our own read-function, implementation is done below the main(...)-function
 
+void drawPoints(std::vector<Point3d>& points, double size, GLbyte color_r, GLbyte color_g, GLbyte color_b);
 void drawBox();
 void drawCircle();
 void drawCoordinateAxes();
@@ -38,40 +39,40 @@ void drawBackground();
 //Variables to control our virtual camera movements
 GLcamera m_camera;
 Point3d  m_sceneCenter;   //scene center and rotation point
-double   m_sceneRadius=0; //scene radius
+double   m_sceneRadius = 0; //scene radius
 Point3d  m_bbmin, m_bbmax;//bounding box
 
 int m_windowWidth = 0;
-int m_windowHeight= 0;
+int m_windowHeight = 0;
 
 double lastposX, lastposY; //last mouse positions
 
 void initializeGL()
 {
-  glMatrixMode(GL_MODELVIEW);
-  glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 }
 
 //This function is called, wenn the framebuffer size (e.g. if the window size changes)
 void resizeGL(GLFWwindow* window, int width, int height)
 {
-  m_windowWidth =width;
-  m_windowHeight=height;
+	m_windowWidth = width;
+	m_windowHeight = height;
 
-  glViewport(0, 0, width, height);  //set our viewport
+	glViewport(0, 0, width, height);  //set our viewport
 
-  m_camera.setWindowSize(width, height);
-  m_camera.updateProjection(); //adjust projection to new window size
+	m_camera.setWindowSize(width, height);
+	m_camera.updateProjection(); //adjust projection to new window size
 }
 
 //This function is called, wenn a mouse button is pressed
 //We use this function to get the initial mouse position for our camera rotation
 void mouse_press_event(GLFWwindow* window, int button, int action, int mods)
 {
-  if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) //wenn the left mouse button is pressed
-  {
-    glfwGetCursorPos(window, &lastposX, &lastposY); //get the current mouse coursor position
-  }
+	if (button == GLFW_MOUSE_BUTTON_LEFT && action == GLFW_PRESS) //wenn the left mouse button is pressed
+	{
+		glfwGetCursorPos(window, &lastposX, &lastposY); //get the current mouse coursor position
+	}
 }
 
 //This function is called when the mouse is moved
@@ -81,270 +82,264 @@ void mouse_press_event(GLFWwindow* window, int button, int action, int mods)
 //This results in z= sqrt ( r^2 - (x-x0)^2 - (y-y0)^2 )
 void mouse_move_event(GLFWwindow* window, double currposX, double currposY)
 {
-  if (lastposX == currposX && lastposY==currposY) return;
+	if (lastposX == currposX && lastposY == currposY) return;
 
-  //check the mouse button state
-  int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
-  //compute object rotation wenn the left mouse button is pressed
-  if (state == GLFW_PRESS) //if the left mouse button is pressed while it is moved then we rotate
-  {
-    m_camera.rotate((int)lastposX,(int)lastposY,(int)currposX,(int)currposY);
+	//check the mouse button state
+	int state = glfwGetMouseButton(window, GLFW_MOUSE_BUTTON_LEFT);
+	//compute object rotation wenn the left mouse button is pressed
+	if (state == GLFW_PRESS) //if the left mouse button is pressed while it is moved then we rotate
+	{
+		m_camera.rotate((int)lastposX, (int)lastposY, (int)currposX, (int)currposY);
 
-    //the current mouse position is the last mouse position for the next interaction
-    lastposX=currposX;
-    lastposY=currposY;
-  }
+		//the current mouse position is the last mouse position for the next interaction
+		lastposX = currposX;
+		lastposY = currposY;
+	}
 }
 
 //The callback function receives two - dimensional scroll offsets.
 void mouse_wheel_event(GLFWwindow* window, double xoffset, double yoffset)
 {
-  const double factor = (yoffset<0)? 1.1 : 0.9;
-  m_camera.zoom(factor);
+	const double factor = (yoffset < 0) ? 1.1 : 0.9;
+	m_camera.zoom(factor);
 }
 
 int main(int argc, char* argv[]) //this function is called, wenn ou double-click an ".EXE" file
 {
 	int pointSize = 2;
 
-  std::cout << "Hello world! \n This is my console window" << std::endl;
+	std::cout << "Hello world! \n This is my console window" << std::endl;
 
-  //prepare storage for our point cloud
-  std::vector<Point3d> points;
-  int startDim = 0;
+	//prepare storage for our point cloud
+	std::vector<Point3d> points;
+	int startDim = 0;
 
-  //try to load point cloud data from file
-  clock_t begin = clock();
+	//try to load point cloud data from file
+	clock_t begin = clock();
 
-  //loadFileXYZ("data/Stanford Dragon.xyz", points);
-  loadFileXYZ("data/cone.xyz", points);
+	//loadFileXYZ("data/Stanford Dragon.xyz", points);
+	loadFileXYZ("data/cone.xyz", points);
 
-  clock_t end = clock();
-  std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+	clock_t end = clock();
+	std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
 
-  //OK, we now compute the min and max coordinates for our bounding box
-  updateScene(points);
+	//OK, we now compute the min and max coordinates for our bounding box
+	updateScene(points);
 
-  //Load KD-Tree
-  //----------------------------------------------------------------------------
-  begin = clock();
-
-  KDTree data = KDTree(points, startDim);
-
-  end = clock();
-  std::cout << "Time needed to build kdTree: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
-  //----------------------------------------------------------------------------
-
-  //KDTree - Abfrage
-  //----------------------------------------------------------------------------
-  Point3d abfragePoint = points[points.size() / 2];
-
-  Point3d S = m_bbmax - m_bbmin;
-  double abfrageLaenge = S.x * 0.25;
-
-  begin = clock();
-
-  std::vector<Point3d> res = data.abfrage(abfrageLaenge, abfragePoint, startDim);
-  //Point3d resPoint = data.abfragePoint(abfragePoint, startDim);
-
-  //std::cout << "X: " << resPoint.x << " Y: " << resPoint.y << " Z: " << resPoint.z << std::endl;
-
-  end = clock();
-  std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
-  //----------------------------------------------------------------------------
-
-  //Create an OpenGL window with GLFW
-  GLFWwindow* window;
-
-  /* Initialize the library */
-  if (!glfwInit())
-  {
-    fprintf(stderr, "Failed to initialize GLFW\n");
-    getc(stdin);
-    return -1;
-  }
-
-  /* Create a windowed mode window and its OpenGL context */
-  window = glfwCreateWindow(1280, 720, "My OpenGL Window", NULL, NULL);
-  if (!window)
-  {
-    fprintf(stderr, "Failed glfwCreateWindow\n");
-    glfwTerminate();
-    return -1;
-  }
-
-  //setting up events/callbacks
-  glfwSetFramebufferSizeCallback(window, resizeGL);
-  glfwSetCursorPosCallback      (window, mouse_move_event);
-  glfwSetMouseButtonCallback    (window, mouse_press_event);
-  glfwSetScrollCallback         (window, mouse_wheel_event);
-
-  /* Make the window's context current */
-  glfwMakeContextCurrent(window);
-
-  //Prepare our virtual camera
-  glfwGetFramebufferSize(window, &m_windowWidth, &m_windowHeight);
-
-  //Initialize Camera
-  m_camera.setWindowSize(m_windowWidth, m_windowHeight);    //setup window parameters
-  m_camera.initializeCamera(m_sceneCenter, m_sceneRadius);  //set the camera outside the scene
-  m_camera.updateProjection();                              //adjust projection to window size
-
-  /* Loop until the user closes the window */
-  while (!glfwWindowShouldClose(window))
-  {
-    /* Render here */
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear buffers
-    glClearColor(0.0f, 0.0f, 0.0f, 0.0f);               //clear background color
-    glClearDepth(1.0f);                                 //clear depth buffer
-
-    //draws the scene background
-    drawBackground();
-
-    //draw points
-    glPointSize(pointSize);
-
-	glEnable(GL_DEPTH_TEST);
-
-    if (!points.empty())
-    { /* Drawing Points with VertexArrays */
-      glColor3ub(0, 255, 0);
-      glEnableClientState(GL_VERTEX_ARRAY); //enable data upload to GPU
-      glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &points[0]);
-
-      //draw point cloud
-      glDrawArrays(GL_POINTS, 0, (unsigned int)points.size());
-      glDisableClientState(GL_VERTEX_ARRAY);  //disable data upload to GPU
-    }
-
-	//draw res-points
+	//Load KD-Tree
 	//----------------------------------------------------------------------------
-	glPointSize(pointSize + 10);
+	begin = clock();
 
-	glEnable(GL_DEPTH_TEST);
+	KDTree data = KDTree(points, startDim);
 
-	if (!res.empty())
-	{ /* Drawing Points with VertexArrays */
-		glColor3ub(255, 0, 0);
-		glEnableClientState(GL_VERTEX_ARRAY); //enable data upload to GPU
-		glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &res[0]);
+	end = clock();
+	std::cout << "Time needed to build kdTree: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+	//----------------------------------------------------------------------------
 
-		//draw point cloud
-		glDrawArrays(GL_POINTS, 0, (unsigned int)res.size());
-		glDisableClientState(GL_VERTEX_ARRAY);  //disable data upload to GPU
+	//KDTree - Abfrage
+	//----------------------------------------------------------------------------
+	Point3d abfragePoint = points[points.size() / 2];
+
+	Point3d S = m_bbmax - m_bbmin;
+	double abfrageLaenge = S.x * 0.25;
+
+	begin = clock();
+
+	std::vector<Point3d> res = data.abfrage(abfrageLaenge, abfragePoint, startDim);
+	//Point3d resPoint = data.abfragePoint(abfragePoint, startDim);
+
+	//std::cout << "X: " << resPoint.x << " Y: " << resPoint.y << " Z: " << resPoint.z << std::endl;
+
+	end = clock();
+	std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+	//----------------------------------------------------------------------------
+
+	//Create an OpenGL window with GLFW
+	GLFWwindow* window;
+
+	/* Initialize the library */
+	if (!glfwInit())
+	{
+		fprintf(stderr, "Failed to initialize GLFW\n");
+		getc(stdin);
+		return -1;
 	}
-	//----------------------------------------------------------------------------
 
-	//draw bounding box for Abfrage
-	//----------------------------------------------------------------------------
-	glPushMatrix();
-	glPushAttrib(GL_POLYGON_BIT);
-	glColor3ub(255, 255, 255);
-	glTranslated(abfragePoint.x - abfrageLaenge, abfragePoint.y - abfrageLaenge, abfragePoint.z - abfrageLaenge);
-	glScaled(abfrageLaenge * 2, abfrageLaenge * 2, abfrageLaenge * 2);
+	/* Create a windowed mode window and its OpenGL context */
+	window = glfwCreateWindow(1280, 720, "My OpenGL Window", NULL, NULL);
+	if (!window)
+	{
+		fprintf(stderr, "Failed glfwCreateWindow\n");
+		glfwTerminate();
+		return -1;
+	}
 
-	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //draw wire frame instead of filled quads
-	drawBox();
-	glPopAttrib();
-	glPopMatrix();
-	//----------------------------------------------------------------------------
+	//setting up events/callbacks
+	glfwSetFramebufferSizeCallback(window, resizeGL);
+	glfwSetCursorPosCallback(window, mouse_move_event);
+	glfwSetMouseButtonCallback(window, mouse_press_event);
+	glfwSetScrollCallback(window, mouse_wheel_event);
 
-    //draw coordinate axes
-    drawCoordinateAxes();
+	/* Make the window's context current */
+	glfwMakeContextCurrent(window);
 
-    /* Swap front and back buffers */
-    glfwSwapBuffers(window);
+	//Prepare our virtual camera
+	glfwGetFramebufferSize(window, &m_windowWidth, &m_windowHeight);
 
-    /* Poll for and process events */
-    glfwPollEvents();
- }
+	//Initialize Camera
+	m_camera.setWindowSize(m_windowWidth, m_windowHeight);    //setup window parameters
+	m_camera.initializeCamera(m_sceneCenter, m_sceneRadius);  //set the camera outside the scene
+	m_camera.updateProjection();                              //adjust projection to window size
 
-  glfwTerminate();
+	/* Loop until the user closes the window */
+	while (!glfwWindowShouldClose(window))
+	{
+		/* Render here */
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT); //clear buffers
+		glClearColor(0.0f, 0.0f, 0.0f, 0.0f);               //clear background color
+		glClearDepth(1.0f);                                 //clear depth buffer
+
+		//draws the scene background
+		drawBackground();
+
+		//draw points
+		//----------------------------------------------------------------------------
+		drawPoints(points, pointSize, 0, 255, 0);
+		//----------------------------------------------------------------------------
+
+		//draw res-points
+		//----------------------------------------------------------------------------
+		drawPoints(res, pointSize + 10, 255, 0, 0);
+		//----------------------------------------------------------------------------
+
+		//draw bounding box for Abfrage
+		//----------------------------------------------------------------------------
+		glPushMatrix();
+		glPushAttrib(GL_POLYGON_BIT);
+		glColor3ub(255, 255, 255);
+		glTranslated(abfragePoint.x - abfrageLaenge, abfragePoint.y - abfrageLaenge, abfragePoint.z - abfrageLaenge);
+		glScaled(abfrageLaenge * 2, abfrageLaenge * 2, abfrageLaenge * 2);
+
+		glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //draw wire frame instead of filled quads
+		drawBox();
+		glPopAttrib();
+		glPopMatrix();
+		//----------------------------------------------------------------------------
+
+		//draw coordinate axes
+		drawCoordinateAxes();
+
+		/* Swap front and back buffers */
+		glfwSwapBuffers(window);
+
+		/* Poll for and process events */
+		glfwPollEvents();
+	}
+
+	glfwTerminate();
 
 	return 0;
+}
+
+void drawPoints(std::vector<Point3d>& points, double size, GLbyte color_r, GLbyte color_g, GLbyte color_b)
+{
+	glPointSize(size);
+
+	glEnable(GL_DEPTH_TEST);
+
+	if (!points.empty())
+	{ /* Drawing Points with VertexArrays */
+		glColor3ub(color_r, color_g, color_b);
+		glEnableClientState(GL_VERTEX_ARRAY); //enable data upload to GPU
+		glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &points[0]);
+
+		//draw point cloud
+		glDrawArrays(GL_POINTS, 0, (unsigned int)points.size());
+		glDisableClientState(GL_VERTEX_ARRAY);  //disable data upload to GPU
+	}
 }
 
 //computes the bounding box of a 3d point cloud
 void updateScene(const std::vector<Point3d>& points)
 {
-  //if there are no points we return an empty bounding box
-  if (points.empty())
-  {
-    m_bbmin.x = 0;  m_bbmin.y = 0;  m_bbmin.z = 0;
-    m_bbmax.x = 0;  m_bbmax.y = 0;  m_bbmax.z = 0;
-    return;
-  }
+	//if there are no points we return an empty bounding box
+	if (points.empty())
+	{
+		m_bbmin.x = 0;  m_bbmin.y = 0;  m_bbmin.z = 0;
+		m_bbmax.x = 0;  m_bbmax.y = 0;  m_bbmax.z = 0;
+		return;
+	}
 
-  //We now compute the min and max coordinates for our bounding box
-  m_bbmin = points.front(); //initialize min with the first point
-  m_bbmax = points.front(); //initialize max with the first point
+	//We now compute the min and max coordinates for our bounding box
+	m_bbmin = points.front(); //initialize min with the first point
+	m_bbmax = points.front(); //initialize max with the first point
 
-  for (unsigned int i = 0; i < points.size(); ++i)
-  {
-    const Point3d& pt = points[i]; //do not copy but get a reference to the i-th point in the vector
-    if (pt.x < m_bbmin.x) m_bbmin.x = pt.x;
-    else if (pt.x > m_bbmax.x) m_bbmax.x = pt.x;
+	for (unsigned int i = 0; i < points.size(); ++i)
+	{
+		const Point3d& pt = points[i]; //do not copy but get a reference to the i-th point in the vector
+		if (pt.x < m_bbmin.x) m_bbmin.x = pt.x;
+		else if (pt.x > m_bbmax.x) m_bbmax.x = pt.x;
 
-    if (pt.y < m_bbmin.y) m_bbmin.y = pt.y;
-    else if (pt.y > m_bbmax.y) m_bbmax.y = pt.y;
+		if (pt.y < m_bbmin.y) m_bbmin.y = pt.y;
+		else if (pt.y > m_bbmax.y) m_bbmax.y = pt.y;
 
-    if (pt.z < m_bbmin.z) m_bbmin.z = pt.z;
-    else if (pt.z > m_bbmax.z) m_bbmax.z = pt.z;
-  }
+		if (pt.z < m_bbmin.z) m_bbmin.z = pt.z;
+		else if (pt.z > m_bbmax.z) m_bbmax.z = pt.z;
+	}
 
-  //check how many points we have read from file
-  std::cout << "point vector now contains: " << points.size() << " points" << std::endl;
+	//check how many points we have read from file
+	std::cout << "point vector now contains: " << points.size() << " points" << std::endl;
 
-  if (points.empty())
-  {
-    std::cout << "ERROR: no points to show...(press enter to exit)" << std::endl;
-    getc(stdin);
-    return;
-  }
+	if (points.empty())
+	{
+		std::cout << "ERROR: no points to show...(press enter to exit)" << std::endl;
+		getc(stdin);
+		return;
+	}
 
-  m_sceneCenter = (m_bbmax + m_bbmin) * 0.5;
-  m_sceneRadius = distance3d(m_sceneCenter, m_bbmax);
+	m_sceneCenter = (m_bbmax + m_bbmin) * 0.5;
+	m_sceneRadius = distance3d(m_sceneCenter, m_bbmax);
 
-  std::cout << "\nBounding Box was computed:\n";
-  std::cout << "minPoint is: " << m_bbmin.x << "," << m_bbmin.y << "," << m_bbmin.z << std::endl;
-  std::cout << "maxPoint is: " << m_bbmax.x << "," << m_bbmax.y << "," << m_bbmax.z << std::endl;
+	std::cout << "\nBounding Box was computed:\n";
+	std::cout << "minPoint is: " << m_bbmin.x << "," << m_bbmin.y << "," << m_bbmin.z << std::endl;
+	std::cout << "maxPoint is: " << m_bbmax.x << "," << m_bbmax.y << "," << m_bbmax.z << std::endl;
 }
 
 //Here is the implementation of our file reader
 void loadFileXYZ(const char* filename, std::vector<Point3d>& points)
 {
-  FILE* file = 0;
-  int error = fopen_s(&file, filename, "rt"); //r= read, t=text
-  if (error != 0)
-  {
-    std::cout << "file " << filename << " could not be opened!" << std::endl;
-    return; //nothing can be done else -> end function
-  }
+	FILE* file = 0;
+	int error = fopen_s(&file, filename, "rt"); //r= read, t=text
+	if (error != 0)
+	{
+		std::cout << "file " << filename << " could not be opened!" << std::endl;
+		return; //nothing can be done else -> end function
+	}
 
-  std::cout << "reading file: " << filename << std::endl;
+	std::cout << "reading file: " << filename << std::endl;
 
-  while (!feof(file)) //as long we have not reached the end-of-file
-  {
-    Point3d point;
-    int items = fscanf_s(file, "%lf %lf %lf\n", &point.x, &point.y, &point.z);
+	while (!feof(file)) //as long we have not reached the end-of-file
+	{
+		Point3d point;
+		int items = fscanf_s(file, "%lf %lf %lf\n", &point.x, &point.y, &point.z);
 
-    if (items != 3) //we ecpected that 3 values have been read (except we are already at the end of file)
-    {
-      std::cout << "file format error" << std::endl;
-      break; //abort while loop
-    }
-    else
-    {
-      points.emplace_back(point); //add the current point to our point vector
-    }
-  }
+		if (items != 3) //we ecpected that 3 values have been read (except we are already at the end of file)
+		{
+			std::cout << "file format error" << std::endl;
+			break; //abort while loop
+		}
+		else
+		{
+			points.emplace_back(point); //add the current point to our point vector
+		}
+	}
 
-  //dont forget to close to file
-  fclose(file);
+	//dont forget to close to file
+	fclose(file);
 
-  unsigned int numberOfPoints = points.size();
+	unsigned int numberOfPoints = points.size();
 
-  std::cout << "reading finished: " << numberOfPoints << " points have be read" << std::endl;
+	std::cout << "reading finished: " << numberOfPoints << " points have be read" << std::endl;
 }
 
 /** draws a unit box.
@@ -354,80 +349,80 @@ afterwards use glScale(sx,sy,sz) resize the box.
 */
 void drawBox()
 {
-  glBegin(GL_QUADS);
-  glVertex3d(0, 0, 0); glVertex3d(1, 0, 0); glVertex3d(1, 1, 0); glVertex3d(0, 1, 0); //front
-  glVertex3d(0, 0, 1); glVertex3d(1, 0, 1); glVertex3d(1, 1, 1); glVertex3d(0, 1, 1); //back
-  glVertex3d(0, 0, 0); glVertex3d(0, 0, 1); glVertex3d(0, 1, 1); glVertex3d(0, 1, 0); //left
-  glVertex3d(1, 0, 0); glVertex3d(1, 0, 1); glVertex3d(1, 1, 1); glVertex3d(1, 1, 0); //right
-  glVertex3d(0, 0, 0); glVertex3d(1, 0, 0); glVertex3d(1, 0, 1); glVertex3d(0, 0, 1); //bottom
-  glVertex3d(0, 1, 0); glVertex3d(1, 1, 0); glVertex3d(1, 1, 1); glVertex3d(0, 1, 1); //top
-  glEnd();
+	glBegin(GL_QUADS);
+	glVertex3d(0, 0, 0); glVertex3d(1, 0, 0); glVertex3d(1, 1, 0); glVertex3d(0, 1, 0); //front
+	glVertex3d(0, 0, 1); glVertex3d(1, 0, 1); glVertex3d(1, 1, 1); glVertex3d(0, 1, 1); //back
+	glVertex3d(0, 0, 0); glVertex3d(0, 0, 1); glVertex3d(0, 1, 1); glVertex3d(0, 1, 0); //left
+	glVertex3d(1, 0, 0); glVertex3d(1, 0, 1); glVertex3d(1, 1, 1); glVertex3d(1, 1, 0); //right
+	glVertex3d(0, 0, 0); glVertex3d(1, 0, 0); glVertex3d(1, 0, 1); glVertex3d(0, 0, 1); //bottom
+	glVertex3d(0, 1, 0); glVertex3d(1, 1, 0); glVertex3d(1, 1, 1); glVertex3d(0, 1, 1); //top
+	glEnd();
 }
 
 //draws a unit circle with radius 1 at the origin(0,0,0)
 //use glTranslate, glScale and glRotate to resize and reposition the circle
 void drawCircle()
 {
-  const int segments = 180;
+	const int segments = 180;
 
-  glBegin(GL_LINE_LOOP);
-  for (int i = 0; i < segments; ++i)
-  {
-    const double theta = 2.0 * 3.1415926 * double(i) / double(segments);
-    glVertex2d(cos(theta), sin(theta));
-  }
-  glEnd();
+	glBegin(GL_LINE_LOOP);
+	for (int i = 0; i < segments; ++i)
+	{
+		const double theta = 2.0 * 3.1415926 * double(i) / double(segments);
+		glVertex2d(cos(theta), sin(theta));
+	}
+	glEnd();
 }
 
 //draws the coordinate system
 void drawCoordinateAxes()
 {
-  //draw coordinate frame
-  glBegin(GL_LINES);
-    //draw line for X-Axis
-    glColor3ub(255, 0, 0);
-    glVertex3d(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z);
-    glVertex3d(m_sceneCenter.x + m_sceneRadius, m_sceneCenter.y, m_sceneCenter.z);
-    //draw line for Y-Axis
-    glColor3ub(0, 255, 0);
-    glVertex3d(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z);
-    glVertex3d(m_sceneCenter.x, m_sceneCenter.y + m_sceneRadius, m_sceneCenter.z);
-    //draw line for Z-Axis
-    glColor3ub(0, 0, 255);
-    glVertex3d(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z);
-    glVertex3d(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z + m_sceneRadius);
-  glEnd();
+	//draw coordinate frame
+	glBegin(GL_LINES);
+	//draw line for X-Axis
+	glColor3ub(255, 0, 0);
+	glVertex3d(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z);
+	glVertex3d(m_sceneCenter.x + m_sceneRadius, m_sceneCenter.y, m_sceneCenter.z);
+	//draw line for Y-Axis
+	glColor3ub(0, 255, 0);
+	glVertex3d(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z);
+	glVertex3d(m_sceneCenter.x, m_sceneCenter.y + m_sceneRadius, m_sceneCenter.z);
+	//draw line for Z-Axis
+	glColor3ub(0, 0, 255);
+	glVertex3d(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z);
+	glVertex3d(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z + m_sceneRadius);
+	glEnd();
 
-  //draw center point as a sphere
-  glPushMatrix();
-    glColor3ub(255, 255, 0);
-    glTranslated(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z);
-    GLUquadric* quad = gluNewQuadric();
-    gluSphere(quad, m_sceneRadius / 20, 30, 30);
-    gluDeleteQuadric(quad);
-  glPopMatrix();
+	//draw center point as a sphere
+	glPushMatrix();
+	glColor3ub(255, 255, 0);
+	glTranslated(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z);
+	GLUquadric* quad = gluNewQuadric();
+	gluSphere(quad, m_sceneRadius / 20, 30, 30);
+	gluDeleteQuadric(quad);
+	glPopMatrix();
 
-  glPushMatrix();
-    glColor3ub(64, 164, 164);
-    glTranslated(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z);
-    glScaled(m_sceneRadius, m_sceneRadius, m_sceneRadius);
-    drawCircle();
-    //draw another circle 90 degree rotated
-    glRotated(90, 1, 0, 0);
-    drawCircle();
-  glPopMatrix();
+	glPushMatrix();
+	glColor3ub(64, 164, 164);
+	glTranslated(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z);
+	glScaled(m_sceneRadius, m_sceneRadius, m_sceneRadius);
+	drawCircle();
+	//draw another circle 90 degree rotated
+	glRotated(90, 1, 0, 0);
+	drawCircle();
+	glPopMatrix();
 
-  //draw bounding box
-  glPushMatrix();
-  glPushAttrib(GL_POLYGON_BIT);
-  glColor3ub(255, 255, 255);
-  Point3d S = m_bbmax - m_bbmin;
-  glTranslated(m_bbmin.x, m_bbmin.y, m_bbmin.z);
-  glScaled(S.x, S.y, S.z);
-  glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //draw wire frame instead of filled quads
-  drawBox();
-  glPopAttrib();
-  glPopMatrix();
+	//draw bounding box
+	glPushMatrix();
+	glPushAttrib(GL_POLYGON_BIT);
+	glColor3ub(255, 255, 255);
+	Point3d S = m_bbmax - m_bbmin;
+	glTranslated(m_bbmin.x, m_bbmin.y, m_bbmin.z);
+	glScaled(S.x, S.y, S.z);
+	glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //draw wire frame instead of filled quads
+	drawBox();
+	glPopAttrib();
+	glPopMatrix();
 }
 
 //------------------------------------------------------------------------------
@@ -439,35 +434,35 @@ Basically we just want to draw a 2D texture/image.
 //------------------------------------------------------------------------------
 void drawBackground()
 {
-  const float winWidth ((float)m_windowWidth);
-  const float winHeight((float)m_windowHeight);
+	const float winWidth((float)m_windowWidth);
+	const float winHeight((float)m_windowHeight);
 
-  glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_LIGHTING_BIT | GL_CURRENT_BIT);
+	glPushAttrib(GL_DEPTH_BUFFER_BIT | GL_LIGHTING_BIT | GL_CURRENT_BIT);
 
-  glDisable(GL_DEPTH_TEST);
-  glDisable(GL_LIGHTING);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_LIGHTING);
 
-  glMatrixMode(GL_PROJECTION);           //At first we select the Projection matrix
-  glPushMatrix();                        //save Projektion matrix to restore it at the end
-  glLoadIdentity();                      //initialize projection matrix
-  gluOrtho2D(0, winWidth, 0, winHeight); //select orthographic projecton
+	glMatrixMode(GL_PROJECTION);           //At first we select the Projection matrix
+	glPushMatrix();                        //save Projektion matrix to restore it at the end
+	glLoadIdentity();                      //initialize projection matrix
+	gluOrtho2D(0, winWidth, 0, winHeight); //select orthographic projecton
 
-  glMatrixMode(GL_MODELVIEW);            //now change to Modelview because we want to draw something
-  glPushMatrix();
-  glLoadIdentity();
+	glMatrixMode(GL_MODELVIEW);            //now change to Modelview because we want to draw something
+	glPushMatrix();
+	glLoadIdentity();
 
-  glBegin(GL_QUADS);
-  glColor3ub(100, 100, 100); //color bottom
-  glVertex2f(0.0f, 0.0f);  glVertex2f(winWidth, 0.0f);
-  glColor3ub(38, 38, 38);  //color top
-  glVertex2f(winWidth, winHeight);  glVertex2f(0.0f, winHeight);
-  glEnd();
+	glBegin(GL_QUADS);
+	glColor3ub(100, 100, 100); //color bottom
+	glVertex2f(0.0f, 0.0f);  glVertex2f(winWidth, 0.0f);
+	glColor3ub(38, 38, 38);  //color top
+	glVertex2f(winWidth, winHeight);  glVertex2f(0.0f, winHeight);
+	glEnd();
 
-  glMatrixMode(GL_PROJECTION); //select to Projektionmatrix
-  glPopMatrix();  //reset 2D-projection
+	glMatrixMode(GL_PROJECTION); //select to Projektionmatrix
+	glPopMatrix();  //reset 2D-projection
 
-  glMatrixMode(GL_MODELVIEW); //select MODELVIEW
-  glPopMatrix();  //reset ModelviewMatrix to last state
+	glMatrixMode(GL_MODELVIEW); //select MODELVIEW
+	glPopMatrix();  //reset ModelviewMatrix to last state
 
-  glPopAttrib();  //restore last attributes
+	glPopAttrib();  //restore last attributes
 }

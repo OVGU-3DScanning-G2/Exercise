@@ -49,6 +49,7 @@ KDTree data;
 double abfrageLaenge;
 int startDim = 0;
 Point3d& abfragePoint = Point3d(0, 0, 0);
+int pointSize = 2;
 //-----------------------------------------
 
 int m_windowWidth = 0;
@@ -74,9 +75,9 @@ void resizeGL(GLFWwindow* window, int width, int height)
 	m_camera.updateProjection(); //adjust projection to new window size
 }
 
-void spaceKey_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
+void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_SPACE && action == GLFW_PRESS)
+	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
 	{
 		//KDTree - Abfrage
 		//----------------------------------------------------------------------------
@@ -88,13 +89,21 @@ void spaceKey_callback(GLFWwindow* window, int key, int scancode, int action, in
 		clock_t begin = clock();
 
 		res = data.getRange(abfrageLaenge, abfragePoint, startDim);
-		//Point3d resPoint = data.abfragePoint(abfragePoint, startDim);
-
-		//std::cout << "X: " << resPoint.x << " Y: " << resPoint.y << " Z: " << resPoint.z << std::endl;
 
 		clock_t end = clock();
 		std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
 		//----------------------------------------------------------------------------
+	}
+
+	if (key == GLFW_KEY_N && action == GLFW_RELEASE)
+	{
+		abfragePoint = points[(std::rand() % (points.size() + 1))];
+
+		res.clear();
+		res.emplace_back(abfragePoint);
+		res.emplace_back(data.getNN(abfragePoint, startDim));
+
+		std::cout << "X: " << res[0].x << " Y: " << res[0].y << " Z: " << res[0].z << std::endl;
 	}
 }
 
@@ -139,8 +148,6 @@ void mouse_wheel_event(GLFWwindow* window, double xoffset, double yoffset)
 
 int main(int argc, char* argv[]) //this function is called, wenn ou double-click an ".EXE" file
 {
-	int pointSize = 2;
-
 	std::cout << "Hello world! \n This is my console window" << std::endl;
 
 	//try to load point cloud data from file
@@ -186,7 +193,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 	}
 
 	//setting up events/callbacks
-	glfwSetKeyCallback(window, spaceKey_callback);
+	glfwSetKeyCallback(window, key_callback);
 	glfwSetFramebufferSizeCallback(window, resizeGL);
 	glfwSetCursorPosCallback(window, mouse_move_event);
 	glfwSetMouseButtonCallback(window, mouse_press_event);

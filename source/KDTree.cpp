@@ -129,10 +129,9 @@ std::vector<Point3d> KDTree::getRange(double laenge, Point3d& point, int dim)
 
 Point3d KDTree::getNN(Point3d& point, int dim)
 {
-	/*
-	if (left == NULL && right == NULL)
+	if (left == NULL || right == NULL)
 	{
-		return value;
+		return median;
 	}
 	else
 	{
@@ -142,34 +141,32 @@ Point3d KDTree::getNN(Point3d& point, int dim)
 		switch (dim)
 		{
 		case 0:
-			if (value.x >= point.x)
+			if (median.x >= point.x)
 				checkLeft = true;
-			if (value.x < point.x)
+			if (median.x < point.x)
 				checkRight = true;
 			break;
 		case 1:
-			if (value.y >= point.y)
+			if (median.y >= point.y)
 				checkLeft = true;
-			if (value.y < point.y)
+			if (median.y < point.y)
 				checkRight = true;
 			break;
 		case 2:
-			if (value.z >= point.z)
+			if (median.z >= point.z)
 				checkLeft = true;
-			if (value.z < point.z)
+			if (median.z < point.z)
 				checkRight = true;
 			break;
 		}
 
 		if (checkLeft)
 		{
-			return left->abfragePoint(point, (dim + 1) % 3);
+			return left->getNN(point, (dim + 1) % 3);
 		}
 		else
 		{
-			return right->abfragePoint(point, (dim + 1) % 3);
+			return right->getNN(point, (dim + 1) % 3);
 		}
-	}*/
-
-	return Point3d();
+	}
 }

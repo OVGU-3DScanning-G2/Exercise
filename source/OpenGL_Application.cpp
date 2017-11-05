@@ -82,7 +82,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		//KDTree - Abfrage
 		//----------------------------------------------------------------------------
 		abfrage.clear();
-		abfrage.emplace_back(points[(std::rand() % (points.size() + 1))]);
+		int random = (std::rand() % (points.size()));
+		abfrage.emplace_back(points[random]);
 
 		Point3d S = m_bbmax - m_bbmin;
 		abfrageLaenge = S.x * 0.25;
@@ -99,12 +100,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_N && action == GLFW_RELEASE)
 	{
 		abfrage.clear();
-		abfrage.emplace_back(points[(std::rand() % (points.size() + 1))]);
+		int random = (std::rand() % (points.size()));
+		abfrage.emplace_back(points[random]);
 
 		res.clear();
 		res.emplace_back(data.getNN(abfrage[0]));
 
-		std::cout << "X: " << res[0].x << " Y: " << res[0].y << " Z: " << res[0].z << std::endl;
+		//std::cout << "X: " << res[0].x << " Y: " << res[0].y << " Z: " << res[0].z << std::endl;
 	}
 }
 
@@ -426,7 +428,7 @@ void drawCoordinateAxes()
 	glColor3ub(255, 255, 0);
 	glTranslated(m_sceneCenter.x, m_sceneCenter.y, m_sceneCenter.z);
 	GLUquadric* quad = gluNewQuadric();
-	gluSphere(quad, m_sceneRadius / 20, 30, 30);
+	gluSphere(quad, 0.01, 30, 30);
 	gluDeleteQuadric(quad);
 	glPopMatrix();
 

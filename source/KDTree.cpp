@@ -127,41 +127,109 @@ std::vector<Point3d> KDTree::getRange(double laenge, Point3d& point, int dim)
 	return res;
 }
 
+double squaredEuclid(Point3d& p1, Point3d& p2)
+{
+	return pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2) + pow(p1.z - p2.z, 2);
+}
+
 Point3d KDTree::getNN(Point3d& point)
 {
-	double startMinDist = pow(median.x - point.x, 2) + pow(median.y - point.y, 2) + pow(median.z - point.z, 2);
+	double startMinDist = squaredEuclid(median, point);
+
+	if (startMinDist == 0)
+	{
+		startMinDist = DBL_MAX;
+	}
 
 	return getNN(point, startMinDist);
 }
 
 Point3d KDTree::getNN(Point3d& point, double minDist)
 {
-	double currLeftDist = -1;
-	if(left != NULL && point.x != left->median.x && point.y != left->median.y && point.z != left->median.z)
-		currLeftDist = pow(left->median.x - point.x, 2) + pow(left->median.y - point.y, 2) + pow(left->median.z - point.z, 2);
-	double currRightDist = -1; 
-	if(right != NULL && point.x != right->median.x && point.y != right->median.y && point.z != right->median.z)
-		currRightDist = pow(right->median.x - point.x, 2) + pow(right->median.y - point.y, 2) + pow(right->median.z - point.z, 2);
+	double leftDist = -1;
+	if(left != NULL)
+		leftDist = squaredEuclid(left->median, point);
+	double rightDist = -1;
+	if(right != NULL)
+		rightDist = squaredEuclid(right->median, point);
 
-	double currMinDist = 0;
+	double childMinDist = 0;
 
-	if (currLeftDist > currRightDist && currRightDist > 0)
-		currMinDist = currRightDist;
+	if (leftDist > rightDist && rightDist > 0)
+		childMinDist = rightDist;
 	else
 	{
-		if (currLeftDist > 0)
-			currMinDist = currLeftDist;
+		if (leftDist > 0)
+			childMinDist = leftDist;
 		else
-			currMinDist = currRightDist;
+			childMinDist = rightDist;
 	}
 
-	if (minDist <= currMinDist || (currLeftDist < 0 && currRightDist < 0))
+	if ((leftDist < 0 && rightDist < 0) || (minDist <= childMinDist && leftDist != 0 && rightDist != 0))
+	{
+		return median;
+	}
+	else
+	{
+		if ((leftDist == 0 && rightDist > 0) || (rightDist == 0 && leftDist > 0))
+		{
+			Point3d leftPoint = left->getNN(point, minDist);
+			Point3d rightPoint = right->getNN(point, minDist);
+
+			leftDist = squaredEuclid(leftPoint, point);
+			rightDist = squaredEuclid(rightPoint, point);
+
+			if (leftDist < rightDist && leftDist > 0)
+			{
+				childMinDist = leftDist;
+			}
+			else
+			{
+				if (rightDist > 0)
+					childMinDist = rightDist;
+				else
+					childMinDist = leftDist;
+			}
+
+			if (minDist < childMinDist)
+			{
+				return median;
+			}
+			else
+			{
+				if (childMinDist == leftDist)
+					return leftPoint;
+				else
+					return rightPoint;
+			}
+		}
+		else
+		{
+			if (childMinDist == leftDist)
+				return left->getNN(point, childMinDist);
+			else
+				return right->getNN(point, childMinDist);
+		}
+	}
+
+	/*
+	if ((minDist <= currMinDist && currLeftDist != 0 && currRightDist != 0) || (currLeftDist < 0 && currRightDist < 0))
 		return median;
 	else
 	{
+		if (currLeftDist == 0)
+		{
+			return left->getNN(point, currMinDist);
+		}
+
+		if (currRightDist == 0)
+		{
+			return right->getNN(point, currMinDist);
+		}
+
 		if (currMinDist == currLeftDist)
 			return left->getNN(point, currMinDist);
 		else
 			return right->getNN(point, currMinDist);
-	}
+	}*/
 }

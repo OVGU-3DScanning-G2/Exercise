@@ -127,46 +127,41 @@ std::vector<Point3d> KDTree::getRange(double laenge, Point3d& point, int dim)
 	return res;
 }
 
-Point3d KDTree::getNN(Point3d& point, int dim)
+Point3d KDTree::getNN(Point3d& point)
 {
-	if (left == NULL || right == NULL)
-	{
-		return median;
-	}
+	double startMinDist = pow(median.x - point.x, 2) + pow(median.y - point.y, 2) + pow(median.z - point.z, 2);
+
+	return getNN(point, startMinDist);
+}
+
+Point3d KDTree::getNN(Point3d& point, double minDist)
+{
+	double currLeftDist = -1;
+	if(left != NULL && point.x != left->median.x && point.y != left->median.y && point.z != left->median.z)
+		currLeftDist = pow(left->median.x - point.x, 2) + pow(left->median.y - point.y, 2) + pow(left->median.z - point.z, 2);
+	double currRightDist = -1; 
+	if(right != NULL && point.x != right->median.x && point.y != right->median.y && point.z != right->median.z)
+		currRightDist = pow(right->median.x - point.x, 2) + pow(right->median.y - point.y, 2) + pow(right->median.z - point.z, 2);
+
+	double currMinDist = 0;
+
+	if (currLeftDist > currRightDist && currRightDist > 0)
+		currMinDist = currRightDist;
 	else
 	{
-		bool checkLeft = false;
-		bool checkRight = false;
-
-		switch (dim)
-		{
-		case 0:
-			if (median.x >= point.x)
-				checkLeft = true;
-			if (median.x < point.x)
-				checkRight = true;
-			break;
-		case 1:
-			if (median.y >= point.y)
-				checkLeft = true;
-			if (median.y < point.y)
-				checkRight = true;
-			break;
-		case 2:
-			if (median.z >= point.z)
-				checkLeft = true;
-			if (median.z < point.z)
-				checkRight = true;
-			break;
-		}
-
-		if (checkLeft)
-		{
-			return left->getNN(point, (dim + 1) % 3);
-		}
+		if (currLeftDist > 0)
+			currMinDist = currLeftDist;
 		else
-		{
-			return right->getNN(point, (dim + 1) % 3);
-		}
+			currMinDist = currRightDist;
+	}
+
+	if (minDist <= currMinDist || (currLeftDist < 0 && currRightDist < 0))
+		return median;
+	else
+	{
+		if (currMinDist == currLeftDist)
+			return left->getNN(point, currMinDist);
+		else
+			return right->getNN(point, currMinDist);
 	}
 }

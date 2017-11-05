@@ -45,10 +45,10 @@ Point3d  m_bbmin, m_bbmax;//bounding box
 //-----------------------------------------
 std::vector<Point3d> res;
 std::vector<Point3d> points;
+std::vector<Point3d> abfrage;
 KDTree data;
 double abfrageLaenge;
 int startDim = 0;
-Point3d& abfragePoint = Point3d(0, 0, 0);
 int pointSize = 2;
 //-----------------------------------------
 
@@ -81,14 +81,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		//KDTree - Abfrage
 		//----------------------------------------------------------------------------
-		abfragePoint = points[(std::rand() % (points.size() + 1))];
+		abfrage.clear();
+		abfrage.emplace_back(points[(std::rand() % (points.size() + 1))]);
 
 		Point3d S = m_bbmax - m_bbmin;
 		abfrageLaenge = S.x * 0.25;
 
 		clock_t begin = clock();
 
-		res = data.getRange(abfrageLaenge, abfragePoint, startDim);
+		res = data.getRange(abfrageLaenge, abfrage[0], startDim);
 
 		clock_t end = clock();
 		std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
@@ -97,11 +98,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	if (key == GLFW_KEY_N && action == GLFW_RELEASE)
 	{
-		abfragePoint = points[(std::rand() % (points.size() + 1))];
+		abfrage.clear();
+		abfrage.emplace_back(points[(std::rand() % (points.size() + 1))]);
 
 		res.clear();
-		res.emplace_back(abfragePoint);
-		res.emplace_back(data.getNN(abfragePoint, startDim));
+		res.emplace_back(data.getNN(abfrage[0]));
 
 		std::cout << "X: " << res[0].x << " Y: " << res[0].y << " Z: " << res[0].z << std::endl;
 	}
@@ -226,6 +227,11 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 		drawPoints(points, pointSize, 0, 255, 0);
 		//----------------------------------------------------------------------------
 
+		//draw abfrage
+		//----------------------------------------------------------------------------
+		drawPoints(abfrage, pointSize + 10, 0, 255, 0);
+		//----------------------------------------------------------------------------
+
 		//draw res-points
 		//----------------------------------------------------------------------------
 		drawPoints(res, pointSize + 10, 255, 0, 0);
@@ -238,7 +244,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 			glPushMatrix();
 			glPushAttrib(GL_POLYGON_BIT);
 			glColor3ub(255, 255, 255);
-			glTranslated(abfragePoint.x - abfrageLaenge, abfragePoint.y - abfrageLaenge, abfragePoint.z - abfrageLaenge);
+			glTranslated(abfrage[0].x - abfrageLaenge, abfrage[0].y - abfrageLaenge, abfrage[0].z - abfrageLaenge);
 			glScaled(abfrageLaenge * 2, abfrageLaenge * 2, abfrageLaenge * 2);
 
 			glPolygonMode(GL_FRONT_AND_BACK, GL_LINE); //draw wire frame instead of filled quads

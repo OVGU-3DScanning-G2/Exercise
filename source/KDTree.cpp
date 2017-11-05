@@ -26,7 +26,7 @@ KDTree::KDTree()
 KDTree::KDTree(std::vector<Point3d>& points, int dim){
 	if (points.size() == 1)
 	{
-		value = points[0];
+		median = points[0];
 		left = NULL;
 		right = NULL;
 	}
@@ -48,7 +48,7 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 		//  should be point in center of array after sorting
 		if (points.size() == 2)
 		{
-			value = points[0];
+			median = points[0];
 			left = NULL;
 			right = new KDTree(*new std::vector<Point3d>(points.begin() + 1, points.end()), (dim + 1) % 3);
 		}
@@ -62,7 +62,7 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 			std::vector<Point3d>* split_lo = new std::vector<Point3d>(points.begin(), points.begin() + half_size);
 			std::vector<Point3d>* split_hi = new std::vector<Point3d>(points.begin() + half_size + 1, points.end());
 
-			value = points[half_size];
+			median = points[half_size];
 			left = new KDTree(*split_lo, (dim + 1) % 3);
 			right = new KDTree(*split_hi, (dim + 1) % 3);
 		}
@@ -71,7 +71,7 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 	}
 }
 
-std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
+std::vector<Point3d> KDTree::getRange(double laenge, Point3d& point, int dim)
 {
 	std::vector<Point3d> res = std::vector<Point3d>();
 
@@ -81,34 +81,34 @@ std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 	switch (dim)
 	{
 	case 0:
-		if (value.x >= point.x - laenge)
+		if (median.x >= point.x - laenge)
 			checkLeft = true;
-		if (value.x <= point.x + laenge)
+		if (median.x <= point.x + laenge)
 			checkRight = true;
 		break;
 	case 1:
-		if (value.y >= point.y - laenge)
+		if (median.y >= point.y - laenge)
 			checkLeft = true;
-		if (value.y <= point.y + laenge)
+		if (median.y <= point.y + laenge)
 			checkRight = true;
 		break;
 	case 2:
-		if (value.z >= point.z - laenge)
+		if (median.z >= point.z - laenge)
 			checkLeft = true;
-		if (value.z <= point.z + laenge)
+		if (median.z <= point.z + laenge)
 			checkRight = true;
 		break;
 	}
 
 	if (checkLeft && left != NULL)
 	{
-		std::vector<Point3d> res2 = left->abfrage(laenge, point, (dim + 1) % 3);
+		std::vector<Point3d> res2 = left->getRange(laenge, point, (dim + 1) % 3);
 		res.insert(res.end(), res2.begin(), res2.end());
 	}
 
 	if (checkRight && right != NULL)
 	{
-		std::vector<Point3d> res2 = right->abfrage(laenge, point, (dim + 1) % 3);
+		std::vector<Point3d> res2 = right->getRange(laenge, point, (dim + 1) % 3);
 		res.insert(res.end(), res2.begin(), res2.end());
 	}
 
@@ -116,18 +116,18 @@ std::vector<Point3d> KDTree::abfrage(double laenge, Point3d& point, int dim)
 	{
 		bool push = false;
 
-		if (value.x >= point.x - laenge && value.x <= point.x + laenge && value.y >= point.y - laenge && value.y <= point.y + laenge
-			&& value.z >= point.z - laenge && value.z <= point.z + laenge)
+		if (median.x >= point.x - laenge && median.x <= point.x + laenge && median.y >= point.y - laenge && median.y <= point.y + laenge
+			&& median.z >= point.z - laenge && median.z <= point.z + laenge)
 			push = true;
 
 		if(push)
-			res.emplace_back(this->value);
+			res.emplace_back(this->median);
 	}
 
 	return res;
 }
 
-Point3d KDTree::abfragePoint(Point3d& point, int dim)
+Point3d KDTree::getNN(Point3d& point, int dim)
 {
 	/*
 	if (left == NULL && right == NULL)

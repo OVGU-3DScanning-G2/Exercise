@@ -6,9 +6,9 @@ class KDTree
 public:
 	KDTree();
 	KDTree(std::vector<Point3d>& points, int dim = 0);
-	std::vector<Point3d> abfrage(double laenge, Point3d& point, int dim);
-	Point3d abfragePoint(Point3d& point, int dim);
-	Point3d value;
+	std::vector<Point3d> getRange(double laenge, Point3d& point, int dim);
+	Point3d getNN(Point3d& point, int dim);
+	Point3d median;
 	KDTree* left;
 	KDTree* right;
 protected:

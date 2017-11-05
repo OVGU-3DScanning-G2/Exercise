@@ -87,7 +87,7 @@ void spaceKey_callback(GLFWwindow* window, int key, int scancode, int action, in
 
 		clock_t begin = clock();
 
-		res = data.abfrage(abfrageLaenge, abfragePoint, startDim);
+		res = data.getRange(abfrageLaenge, abfragePoint, startDim);
 		//Point3d resPoint = data.abfragePoint(abfragePoint, startDim);
 
 		//std::cout << "X: " << resPoint.x << " Y: " << resPoint.y << " Z: " << resPoint.z << std::endl;
@@ -226,7 +226,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
 		//draw bounding box for Abfrage
 		//----------------------------------------------------------------------------
-		if (abfragePoint.x != 0 || abfragePoint.y != 0 || abfragePoint.z != 0)
+		if (!res.empty())
 		{
 			glPushMatrix();
 			glPushAttrib(GL_POLYGON_BIT);

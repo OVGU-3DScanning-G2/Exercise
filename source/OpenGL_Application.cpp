@@ -231,7 +231,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
 		//draw abfrage
 		//----------------------------------------------------------------------------
-		drawPoints(abfrage, pointSize + 10, 0, 255, 0);
+		drawPoints(abfrage, pointSize + 10, 255, 165, 0);
 		//----------------------------------------------------------------------------
 
 		//draw res-points

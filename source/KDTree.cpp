@@ -131,25 +131,155 @@ std::vector<Point3d> KDTree::getRange(double laenge, Point3d& point, int dim)
 	return res;
 }
 
-double squaredEuclid(Point3d& p1, Point3d& p2)
+double euclid(Point3d& p1, Point3d& p2)
 {
-	return pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2) + pow(p1.z - p2.z, 2);
+	return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2) + pow(p1.z - p2.z, 2));
+}
+
+bool samePoints(Point3d& p1, Point3d& p2)
+{
+	if (p1.x == p2.x && p1.y == p2.y && p1.z == p2.z)
+		return true;
+	else
+		return false;
 }
 
 Point3d KDTree::getNN(Point3d& point)
 {
+	/*
 	double startMinDist = squaredEuclid(median, point);
 
 	if (startMinDist == 0)
 	{
 		startMinDist = DBL_MAX;
-	}
+	}*/
 
-	return getNN(point, startMinDist);
+	return getNN(point, 0);
 }
 
-Point3d KDTree::getNN(Point3d& point, double minDist)
+Point3d KDTree::getNN(Point3d& point, int dim)
 {
+	//Rekursion nach unten
+	//----------------------
+	if (this == NULL)
+		return Point3d(DBL_MAX, DBL_MAX, DBL_MAX);
+
+	if (left == NULL && right == NULL)
+	{
+		return median;
+	}
+
+	bool goLeft = false;
+
+	switch (dim)
+	{
+	case 0:
+		if (point.x <= median.x)
+			goLeft = true;
+		break;
+	case 1:
+		if (point.y <= median.y)
+			goLeft = true;
+		break;
+	case 2:
+		if (point.z <= median.z)
+			goLeft = true;
+		break;
+	}
+
+	if (left != NULL)
+	{
+		if (samePoints(left->median, point) && left->left == NULL && left->right == NULL)
+		{
+			goLeft = false;
+		}
+	}
+
+	if (right != NULL)
+	{
+		if (samePoints(right->median, point) && right->left == NULL && right->right == NULL)
+		{
+			goLeft = true;
+		}
+	}
+
+	Point3d actual;
+
+	if (goLeft)
+	{
+		if (left != NULL)
+		{
+			actual = left->getNN(point, (dim + 1) % 3);
+		}
+		else
+		{
+			return median;
+		}
+	}
+	else
+	{
+		if (right != NULL)
+		{
+			actual = right->getNN(point, (dim + 1) % 3);
+		}
+		else
+		{
+			return median;
+		}
+	}
+	//----------------------
+
+	//Recursion nach oben
+	//----------------------
+	double minDist = euclid(actual, point);
+	bool oldGoLeft = goLeft;
+
+	switch(dim)
+	{
+	case 0:
+		if (abs(median.x - point.x) <= minDist)
+		{
+			goLeft = !goLeft;
+		}
+		break;
+	case 1:
+		if (abs(median.y - point.y) <= minDist)
+		{
+			goLeft = !goLeft;
+		}
+		break;
+	case 2:
+		if (abs(median.z - point.z) <= minDist)
+		{
+			goLeft = !goLeft;
+		}
+		break;
+	}
+
+	if (oldGoLeft != goLeft)
+	{
+		Point3d otherBranchPoint;
+
+		if (goLeft)
+		{
+			otherBranchPoint = left->getNN(point, (dim + 1) % 3);
+		}
+		else
+		{
+			otherBranchPoint = right->getNN(point, (dim + 1) % 3);
+		}
+
+		if (euclid(otherBranchPoint, point) < euclid(actual, point) && !samePoints(otherBranchPoint, point))
+			actual = otherBranchPoint;
+	}
+
+	if (euclid(median, point) < euclid(actual, point) && !samePoints(median, point))
+		actual = median;
+
+	return actual;
+	//----------------------
+
+	/*
 	double leftDist = -1;
 	if(left != NULL)
 		leftDist = squaredEuclid(left->median, point);
@@ -214,7 +344,7 @@ Point3d KDTree::getNN(Point3d& point, double minDist)
 			else
 				return right->getNN(point, childMinDist);
 		}
-	}
+	}*/
 
 	/*
 	if ((minDist <= currMinDist && currLeftDist != 0 && currRightDist != 0) || (currLeftDist < 0 && currRightDist < 0))

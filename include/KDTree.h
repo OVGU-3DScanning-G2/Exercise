@@ -14,5 +14,5 @@ public:
 protected:
 	// dim: dimension to spit at
 private:
-	Point3d getNN(Point3d& point, double minDist);
+	Point3d getNN(Point3d& point, int dim);
 };

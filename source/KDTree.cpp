@@ -32,15 +32,19 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 	}
 	else {
 		// sort points
+		int median_index = points.size() / 2;
 		switch (dim) {
 		case 0:
-			std::sort(points.begin(), points.end(), sortByXvalue);
+			std::nth_element(points.begin(), points.begin() + median_index,
+				points.end(), sortByXvalue);
 			break;
 		case 1:
-			std::sort(points.begin(), points.end(), sortByYvalue);
+			std::nth_element(points.begin(), points.begin() + median_index,
+				points.end(), sortByYvalue);
 			break;
 		case 2:
-			std::sort(points.begin(), points.end(), sortByZvalue);
+			std::nth_element(points.begin(), points.begin() + median_index,
+				points.end(), sortByZvalue);
 			break;
 		}
 

@@ -166,6 +166,11 @@ Point3d KDTree::getNN(Point3d& point, int dim)
 
 	if (left == NULL && right == NULL)
 	{
+		if (samePoints(median, point))
+		{
+			return Point3d(DBL_MAX, DBL_MAX, DBL_MAX);
+		}
+
 		return median;
 	}
 
@@ -213,6 +218,11 @@ Point3d KDTree::getNN(Point3d& point, int dim)
 		}
 		else
 		{
+			if (samePoints(median, point))
+			{
+				return Point3d(DBL_MAX, DBL_MAX, DBL_MAX);
+			}
+
 			return median;
 		}
 	}
@@ -224,6 +234,11 @@ Point3d KDTree::getNN(Point3d& point, int dim)
 		}
 		else
 		{
+			if (samePoints(median, point))
+			{
+				return Point3d(DBL_MAX, DBL_MAX, DBL_MAX);
+			}
+
 			return median;
 		}
 	}

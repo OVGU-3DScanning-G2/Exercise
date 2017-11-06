@@ -89,11 +89,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		abfrageLaenge = S.x * 0.25;
 
 		clock_t begin = clock();
-
 		res = data.getRange(abfrageLaenge, abfrage[0], startDim);
-
 		clock_t end = clock();
-		std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+
+		std::cout << "Time needed to calculate range query: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
 		//----------------------------------------------------------------------------
 	}
 
@@ -104,9 +103,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		abfrage.emplace_back(points[random]);
 
 		res.clear();
-		res.emplace_back(data.getNN(abfrage[0]));
 
-		//std::cout << "X: " << res[0].x << " Y: " << res[0].y << " Z: " << res[0].z << std::endl;
+		clock_t begin = clock();
+		res.emplace_back(data.getNN(abfrage[0]));
+		clock_t end = clock();
+
+		std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
 	}
 }
 

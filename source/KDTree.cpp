@@ -70,8 +70,6 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 			left = new KDTree(*split_lo, (dim + 1) % 3);
 			right = new KDTree(*split_hi, (dim + 1) % 3);
 		}
-
-		//std::cout << this->value.x << " " << this->value.y << " " << this->value.z << std::endl;
 	}
 }
 
@@ -146,14 +144,6 @@ bool samePoints(Point3d& p1, Point3d& p2)
 
 Point3d KDTree::getNN(Point3d& point)
 {
-	/*
-	double startMinDist = squaredEuclid(median, point);
-
-	if (startMinDist == 0)
-	{
-		startMinDist = DBL_MAX;
-	}*/
-
 	return getNN(point, 0);
 }
 
@@ -293,92 +283,4 @@ Point3d KDTree::getNN(Point3d& point, int dim)
 
 	return actual;
 	//----------------------
-
-	/*
-	double leftDist = -1;
-	if(left != NULL)
-		leftDist = squaredEuclid(left->median, point);
-	double rightDist = -1;
-	if(right != NULL)
-		rightDist = squaredEuclid(right->median, point);
-
-	double childMinDist = 0;
-
-	if (leftDist > rightDist && rightDist > 0)
-		childMinDist = rightDist;
-	else
-	{
-		if (leftDist > 0)
-			childMinDist = leftDist;
-		else
-			childMinDist = rightDist;
-	}
-
-	if ((leftDist < 0 && rightDist < 0) || (minDist <= childMinDist && leftDist != 0 && rightDist != 0))
-	{
-		return median;
-	}
-	else
-	{
-		if ((leftDist == 0 && rightDist > 0) || (rightDist == 0 && leftDist > 0))
-		{
-			Point3d leftPoint = left->getNN(point, minDist);
-			Point3d rightPoint = right->getNN(point, minDist);
-
-			leftDist = squaredEuclid(leftPoint, point);
-			rightDist = squaredEuclid(rightPoint, point);
-
-			if (leftDist < rightDist && leftDist > 0)
-			{
-				childMinDist = leftDist;
-			}
-			else
-			{
-				if (rightDist > 0)
-					childMinDist = rightDist;
-				else
-					childMinDist = leftDist;
-			}
-
-			if (minDist < childMinDist)
-			{
-				return median;
-			}
-			else
-			{
-				if (childMinDist == leftDist)
-					return leftPoint;
-				else
-					return rightPoint;
-			}
-		}
-		else
-		{
-			if (childMinDist == leftDist)
-				return left->getNN(point, childMinDist);
-			else
-				return right->getNN(point, childMinDist);
-		}
-	}*/
-
-	/*
-	if ((minDist <= currMinDist && currLeftDist != 0 && currRightDist != 0) || (currLeftDist < 0 && currRightDist < 0))
-		return median;
-	else
-	{
-		if (currLeftDist == 0)
-		{
-			return left->getNN(point, currMinDist);
-		}
-
-		if (currRightDist == 0)
-		{
-			return right->getNN(point, currMinDist);
-		}
-
-		if (currMinDist == currLeftDist)
-			return left->getNN(point, currMinDist);
-		else
-			return right->getNN(point, currMinDist);
-	}*/
 }

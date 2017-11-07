@@ -10,6 +10,7 @@ LIBS    += -lSDL2 -lGLEW -lGL -lGLU
 QT       = core gui opengl
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QMAKE_CXXFLAGS += -std=c++11
 
 TARGET = 3DScan_Qt
 TEMPLATE = app

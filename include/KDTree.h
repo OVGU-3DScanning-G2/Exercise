@@ -1,4 +1,9 @@
+#include <algorithm>
+#include <cfloat>
+#include <cmath>
 #include <vector>
+#include <iostream>
+
 #include "include/Point3d.h"
 
 class KDTree

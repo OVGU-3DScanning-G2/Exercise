@@ -4,6 +4,7 @@ Makefile
 moc_*
 .qmake.stash
 *.pro.user
+3dS_01_1
 3dS_01_2
 3DScan_Qt
 3dS_01_1
@@ -11,4 +12,3 @@ moc_*
 CMakeCache.txt
 CMakeFiles/
 cmake_install.cmake
-

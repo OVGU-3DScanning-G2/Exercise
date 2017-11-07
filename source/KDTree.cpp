@@ -1,5 +1,5 @@
-#include "include/KDTree.h"
 #include <random>
+#include "../include/KDTree.h"
 
 bool sortByXvalue(const Point3d& p1, const Point3d& p2)
 {
@@ -145,7 +145,7 @@ bool samePoints(Point3d& p1, Point3d& p2)
 
 bool samePointInVector(Point3d& p, std::vector<Point3d>& points)
 {
-	for each (Point3d point in points)
+    for(Point3d point : points)
 	{
 		if (samePoints(p, point))
 			return true;

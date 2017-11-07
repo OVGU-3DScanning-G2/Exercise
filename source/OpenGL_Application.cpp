@@ -4,6 +4,7 @@
 #define USE_GLFW
 
 #include <string>     //we want to process text + filenames
+#include <fstream>
 #include <iostream>   //for making output text to the console with "cout"
 #include <vector>     //for std::vector class functions
 #include <algorithm>  //for std::sort
@@ -15,9 +16,9 @@
 
 #include <GL/glu.h>
 
-#include "GLcamera.h"
-#include "Point3d.h"
-#include "KDTree.h"
+#include "../include/GLcamera.h"
+#include "../include/Point3d.h"
+#include "../include/KDTree.h"
 
 //Normally compiler & linker options are set in the project file and not in the source code
 //Its just here to show what dependencies are needed
@@ -397,40 +398,22 @@ void updateScene(const std::vector<Point3d>& points)
 //Here is the implementation of our file reader
 void loadFileXYZ(const char* filename, std::vector<Point3d>& points)
 {
-	FILE* file = 0;
-	int error = fopen_s(&file, filename, "rt"); //r= read, t=text
-	if (error != 0)
-	{
-		std::cout << "file " << filename << " could not be opened!" << std::endl;
-		return; //nothing can be done else -> end function
-	}
+    points.clear();
+    std::ifstream file(filename);
+    if(!file)
+    {
+        std::cout << "File not found\t " << filename << " is unavailable." << std::endl;
+        return;
+    }
 
-	std::cout << "reading file: " << filename << std::endl;
+    std::cout << "reading file: " << filename << std::endl;
+    double a,b,c;
+    while(file >> a >> b >> c)
+//        points.push_back(Point3d(a,b,c));
+        points.emplace_back(a,b,c);// equal to the cmd above
 
-	points.clear();
-
-	while (!feof(file)) //as long we have not reached the end-of-file
-	{
-		Point3d point;
-		int items = fscanf_s(file, "%lf %lf %lf\n", &point.x, &point.y, &point.z);
-
-		if (items != 3) //we ecpected that 3 values have been read (except we are already at the end of file)
-		{
-			std::cout << "file format error" << std::endl;
-			break; //abort while loop
-		}
-		else
-		{
-			points.emplace_back(point); //add the current point to our point vector
-		}
-	}
-
-	//dont forget to close to file
-	fclose(file);
-
-	unsigned int numberOfPoints = points.size();
-
-	std::cout << "reading finished: " << numberOfPoints << " points have be read" << std::endl;
+    size_t numberOfPoints = points.size();
+    std::cout << "reading finished: " << numberOfPoints << " points have be read" << std::endl;
 }
 
 /** draws a unit box.

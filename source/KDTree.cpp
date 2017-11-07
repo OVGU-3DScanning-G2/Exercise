@@ -1,4 +1,4 @@
-#include "include/KDTree.h"
+#include "../include/KDTree.h"
 
 bool sortByXvalue(const Point3d& p1, const Point3d& p2)
 {

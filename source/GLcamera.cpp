@@ -1,4 +1,4 @@
-#include "include/GLcamera.h"
+#include "../include/GLcamera.h"
 
 #include <cmath>
 

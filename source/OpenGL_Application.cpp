@@ -233,7 +233,66 @@ void mouse_wheel_event(GLFWwindow* window, double xoffset, double yoffset)
 
 int main(int argc, char* argv[]) //this function is called, wenn ou double-click an ".EXE" file
 {
-	std::cout << "Hello world! \n This is my console window" << std::endl;
+	std::cout 	<< "usage 3ds_01_1 [ -nn <x> <y> <z> | -range <x> <y> <z> ] [-f <filename>]" << std::endl \
+				<< std::endl \
+				<< "	--nn <x> <y> <z> 			-	find Nearest Neighbour for <x;y;z>" << std::endl \
+				<< "	--range <r> <x> <y> <z> 	-	highlight range <r> around <x;y;z>" << std::endl \
+				<< "	<filename> 					-	load specific xyz-File" << std::endl;
+
+	std::string job = "";
+	int x = 0, y = 0, z = 0, r = 0;
+	std::string filename = "data/cone.xyz";
+
+	// parse arguments
+	for(int i = 1; i<argc; i++){
+		if(argv[i][0] == '-'){
+			std::string option = argv[i];
+			if( option == "-f"){
+				i++;
+				filename = argv[i];
+			} else if( option == "--range") {
+				job = "range";
+				i++;
+				r = std::atoi(argv[i]);
+				i++;
+				x = std::atoi(argv[i]);
+				i++;
+				y = std::atoi(argv[i]);
+				i++;
+				z = std::atoi(argv[i]);
+			} else if( option == "--nn") {
+				job = "nn";
+				i++;
+				x = std::atoi(argv[i]);
+				i++;
+				y = std::atoi(argv[i]);
+				i++;
+				z = std::atoi(argv[i]);
+			}
+		}
+	}
+
+	//try to load point cloud data from file
+	clock_t begin = clock();
+
+	//loadFileXYZ("data/Stanford Dragon.xyz", points);
+	loadFileXYZ(filename.c_str(), points);
+
+	clock_t end = clock();
+	std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+
+	//OK, we now compute the min and max coordinates for our bounding box
+	updateScene(points);
+
+	//Load KD-Tree
+	//----------------------------------------------------------------------------
+	begin = clock();
+
+	data = KDTree(points, startDim);
+
+	end = clock();
+	std::cout << "Time needed to build kdTree: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+	//----------------------------------------------------------------------------
 
 	//Create an OpenGL window with GLFW
 	GLFWwindow* window;

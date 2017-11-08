@@ -156,12 +156,12 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 {
 	std::cout 	<< "usage 3ds_01_1 [ -nn <x> <y> <z> | -range <x> <y> <z> ] [-f <filename>]" << std::endl \
 				<< std::endl \
-				<< "	--nn <x> <y> <z> 			-	find Nearest Neighbour for <x;y;z>" << std::endl \
-				<< "	--range <r> <x> <y> <z> 	-	highlight range <r> around <x;y;z>" << std::endl \
-				<< "	<filename> 					-	load specific xyz-File" << std::endl;
+				<< "	--nn <x> <y> <z>          -   find Nearest Neighbour for <x;y;z>" << std::endl \
+				<< "	--range <r> <x> <y> <z>   -   highlight range <r> around <x;y;z>" << std::endl \
+				<< "	-f <filename>             -   load specific xyz-File" << std::endl;
 
 	std::string job = "";
-	int x = 0, y = 0, z = 0, r = 0;
+	double x = 0, y = 0, z = 0, r = 0;
 	std::string filename = "data/cone.xyz";
 
 	// parse arguments
@@ -174,21 +174,21 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 			} else if( option == "--range") {
 				job = "range";
 				i++;
-				r = std::atoi(argv[i]);
+				r = std::stod(std::string(argv[i]));
 				i++;
-				x = std::atoi(argv[i]);
+			 	x= std::stod(std::string(argv[i]));
 				i++;
-				y = std::atoi(argv[i]);
+				y = std::stod(std::string(argv[i]));
 				i++;
-				z = std::atoi(argv[i]);
+				z = std::stod(std::string(argv[i]));
 			} else if( option == "--nn") {
 				job = "nn";
 				i++;
-				x = std::atoi(argv[i]);
+				x = std::stod(std::string(argv[i]));
 				i++;
-				y = std::atoi(argv[i]);
+				y = std::stod(std::string(argv[i]));
 				i++;
-				z = std::atoi(argv[i]);
+				z = std::stod(std::string(argv[i]));
 			}
 		}
 	}
@@ -252,6 +252,45 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 	m_camera.setWindowSize(m_windowWidth, m_windowHeight);    //setup window parameters
 	m_camera.initializeCamera(m_sceneCenter, m_sceneRadius);  //set the camera outside the scene
 	m_camera.updateProjection();                              //adjust projection to window size
+
+
+
+	if (job == "range"){
+		//KDTree - Abfrage
+		//----------------------------------------------------------------------------
+		Point3d S(x, y, z);
+		abfrageLaenge = S.x * r;
+
+		std::cout << "calculating range for Point <" << S.x << " " << S.y << " " << S.z << ">  " << " with range " << r << std::endl;
+
+		abfrage.clear();
+		res.clear();
+
+		abfrage.emplace_back(S);
+
+		clock_t begin = clock();
+		res = data.getRange(abfrageLaenge, abfrage[0], startDim);
+		clock_t end = clock();
+
+		std::cout << "Time needed to calculate range query: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+		//----------------------------------------------------------------------------
+	} else if(job == "nn"){
+		Point3d S(x, y, z);
+
+		std::cout << "calculating nearest Neighbour for Point <" << S.x << " " << S.y << " " << S.z << ">" << std::endl;
+
+		abfrage.clear();
+		res.clear();
+
+		abfrage.emplace_back(S);
+
+		clock_t begin = clock();
+		res.emplace_back(data.getNN(abfrage[0]));
+		clock_t end = clock();
+
+		std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+	}
+
 
 	/* Loop until the user closes the window */
 	while (!glfwWindowShouldClose(window))

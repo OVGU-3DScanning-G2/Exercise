@@ -149,9 +149,12 @@ Point3d KDTree::getNN(Point3d& point, int dim)
 {
 	//Rekursion nach unten
 	//----------------------
+
+	// go back if below leaf
 	if (this == NULL)
 		return Point3d(DBL_MAX, DBL_MAX, DBL_MAX);
 
+	// go back if current leaf == point
 	if (left == NULL && right == NULL)
 	{
 		if (samePoints(median, point))

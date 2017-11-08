@@ -180,9 +180,12 @@ Point3d KDTree::getNN(std::vector<Point3d>& points, int dim)
 {
 	//Rekursion nach unten
 	//----------------------
+
+	// go back if below leaf
 	if (this == NULL)
 		return Point3d(DBL_MAX, DBL_MAX, DBL_MAX); //Rückgabe von Unendlich beim Ankommen vom Ende des KDTree
 
+	// go back if current leaf == point
 	if (left == NULL && right == NULL)
 	{
 		if (samePointInVector(*median, points))

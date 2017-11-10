@@ -105,7 +105,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		res.clear();
 
 		clock_t begin = clock();
-		res.emplace_back(data.getNN(abfrage[0]));
+		res.emplace_back(data.getNN(abfrage[0], 1));
 		clock_t end = clock();
 
 		std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
@@ -160,6 +160,8 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
 	//loadFileXYZ("data/Stanford Dragon.xyz", points);
 	loadFileXYZ("data/cone.xyz", points);
+
+	//Tipp -> #pragma omp parallel for
 
 	clock_t end = clock();
 	std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;

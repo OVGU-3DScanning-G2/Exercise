@@ -105,7 +105,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		res.clear();
 
 		clock_t begin = clock();
-		res.emplace_back(data.getNN(abfrage[0], 1));
+		res = data.getKNN(abfrage[0], 10);
 		clock_t end = clock();
 
 		std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";

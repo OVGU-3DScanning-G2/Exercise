@@ -140,7 +140,18 @@ bool samePoints(Point3d& p1, Point3d& p2)
 		return false;
 }
 
-Point3d KDTree::getNN(Point3d& point, int k)
+bool samePointInVector(Point3d& p, std::vector<Point3d>& points)
+{
+	for each (Point3d point in points)
+	{
+		if (samePoints(p, point))
+			return true;
+	}
+
+	return false;
+}
+
+std::vector<Point3d> KDTree::getKNN(Point3d& point, int k)
 {
 	if (k < 1)
 	{
@@ -148,10 +159,19 @@ Point3d KDTree::getNN(Point3d& point, int k)
 		std::cout << "Automatically set k to 1, because it was smaller than 1." << std::endl;
 	}
 
-	return getNN(point,k , 0);
+	std::vector<Point3d> points{point};
+
+	for (int i = 0; i < k; i++)
+	{
+		points.emplace_back(getNN(points, 0));
+	}
+
+	points.erase(points.begin());
+
+	return points;
 }
 
-Point3d KDTree::getNN(Point3d& point, int k, int dim)
+Point3d KDTree::getNN(std::vector<Point3d>& points, int dim)
 {
 	//Rekursion nach unten
 	//----------------------
@@ -160,7 +180,7 @@ Point3d KDTree::getNN(Point3d& point, int k, int dim)
 
 	if (left == NULL && right == NULL)
 	{
-		if (samePoints(median, point))
+		if (samePointInVector(median, points))
 			return Point3d(DBL_MAX, DBL_MAX, DBL_MAX); //Rückgabe von Unendlich beim Ankommen vom
 														//Blatt des KDTree (Punkt ist angefragter Punkt)
 		else
@@ -172,15 +192,15 @@ Point3d KDTree::getNN(Point3d& point, int k, int dim)
 	switch (dim) //Überprüfung, ob nach links gegangen werden muss oder nach rechts
 	{
 	case 0:
-		if (point.x <= median.x) //X
+		if (points.front().x <= median.x) //X
 			goLeft = true;
 		break;
 	case 1:
-		if (point.y <= median.y) //Y
+		if (points.front().y <= median.y) //Y
 			goLeft = true;
 		break;
 	case 2:
-		if (point.z <= median.z) //Z
+		if (points.front().z <= median.z) //Z
 			goLeft = true;
 		break;
 	}
@@ -189,35 +209,35 @@ Point3d KDTree::getNN(Point3d& point, int k, int dim)
 
 	if (goLeft)
 	{
-		actual = left->getNN(point, k, (dim + 1) % 3); //Ermittlung des nähesten Punktes im linken Teil
+		actual = left->getNN(points, (dim + 1) % 3); //Ermittlung des nähesten Punktes im linken Teil
 	}
 	else
 	{
-		actual = right->getNN(point, k, (dim + 1) % 3); //Ermittlung des nähesten Punktes im rechten Teil
+		actual = right->getNN(points, (dim + 1) % 3); //Ermittlung des nähesten Punktes im rechten Teil
 	}
 	//----------------------
 
 	//Recursion nach oben
 	//----------------------
-	double minDist = euclid(actual, point); //Distanz zwischen ermitteltem Punkt und angefragten Punkt
+	double minDist = euclid(actual, points.front()); //Distanz zwischen ermitteltem Punkt und angefragten Punkt
 	bool oldGoLeft = goLeft;
 
 	switch(dim) //Überprüfung ob es Punkte im anderen Teilbaum gibt, die näher seien könnten
 	{
 	case 0:
-		if (abs(median.x - point.x) <= minDist) //X
+		if (abs(median.x - points.front().x) <= minDist) //X
 		{
 			goLeft = !goLeft;
 		}
 		break;
 	case 1:
-		if (abs(median.y - point.y) <= minDist) //Y
+		if (abs(median.y - points.front().y) <= minDist) //Y
 		{
 			goLeft = !goLeft;
 		}
 		break;
 	case 2:
-		if (abs(median.z - point.z) <= minDist) //Z
+		if (abs(median.z - points.front().z) <= minDist) //Z
 		{
 			goLeft = !goLeft;
 		}
@@ -230,18 +250,18 @@ Point3d KDTree::getNN(Point3d& point, int k, int dim)
 
 		if (goLeft)
 		{
-			otherBranchPoint = left->getNN(point, k, (dim + 1) % 3); //Ermittlung des Punktes für den linken Teilbaum
+			otherBranchPoint = left->getNN(points, (dim + 1) % 3); //Ermittlung des Punktes für den linken Teilbaum
 		}
 		else
 		{
-			otherBranchPoint = right->getNN(point, k, (dim + 1) % 3); //Ermittlung des Punktes für den rechten Teilbaum
+			otherBranchPoint = right->getNN(points, (dim + 1) % 3); //Ermittlung des Punktes für den rechten Teilbaum
 		}
 
-		if (euclid(otherBranchPoint, point) < euclid(actual, point) && !samePoints(otherBranchPoint, point))
+		if (euclid(otherBranchPoint, points.front()) < euclid(actual, points.front()) && !samePointInVector(otherBranchPoint, points))
 			actual = otherBranchPoint; //Übernahme des Punktes, wenn er näher ist als der andere
 	}
 
-	if (euclid(median, point) < euclid(actual, point) && !samePoints(median, point))
+	if (euclid(median, points.front()) < euclid(actual, points.front()) && !samePointInVector(median, points))
 		actual = median; //Übernhame des Medians, sollte dieser noch näher dran sein
 
 	return actual; //Übergabe des ermittelten Wertes

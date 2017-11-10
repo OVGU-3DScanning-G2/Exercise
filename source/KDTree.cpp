@@ -274,18 +274,27 @@ std::vector<Point3d> KDTree::smooth(std::vector<Point3d>& points, int strength)
 	std::vector<Point3d> neighborHood;
 	double newX = 0, newY = 0, newZ = 0;
 
-	for each(Point3d point in points)
+	//#pragma omp parallel for
+	for(unsigned int i = 0; i < points.size(); i++)
 	{
-		neighborHood = getKNN(point, strength);
+		neighborHood = getKNN(points[i], strength);
 
-		for each (Point3d nPoint in neighborHood)
+		double maxdist = euclid(points[i], neighborHood.back());
+		double gewicht = 0;
+
+		for(unsigned int j = 0; j < neighborHood.size(); j++)
 		{
-			newX += nPoint.x;
-			newY += nPoint.y;
-			newZ += nPoint.z;
+			gewicht = exp(-1 * euclid(neighborHood[j], points[i]) / maxdist);
+			newX += neighborHood[j].x * gewicht;
+			newY += neighborHood[j].y * gewicht;
+			newZ += neighborHood[j].z * gewicht;
 		}
 
-		Point3d newPoint = Point3d(newX / strength, newY / strength, newZ / strength);
+		newX += points[i].x;
+		newY += points[i].y;
+		newZ += points[i].z;
+
+		Point3d newPoint = Point3d(newX / (strength + 1), newY / (strength + 1), newZ / (strength + 1));
 		newPoints.emplace_back(newPoint);
 
 		newX = 0;

@@ -126,7 +126,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			numPointsKNN--;
 		}
 
-		res = data.getKNN(abfrage[0], 30);
+		res = data.getKNN(abfrage[0], numPointsKNN);
 	}
 
 	if (key == GLFW_KEY_S && action == GLFW_RELEASE)

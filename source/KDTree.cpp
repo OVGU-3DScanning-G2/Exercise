@@ -285,7 +285,12 @@ std::vector<Point3d> KDTree::smooth(std::vector<Point3d>& points, int strength)
 			newZ += nPoint.z;
 		}
 
-		newPoints.emplace_back(Point3d(newX / strength, newY / strength, newZ / strength));
+		Point3d newPoint = Point3d(newX / strength, newY / strength, newZ / strength);
+		newPoints.emplace_back(newPoint);
+
+		newX = 0;
+		newY = 0;
+		newZ = 0;
 	}
 
 	return newPoints;

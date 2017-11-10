@@ -126,12 +126,18 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			numPointsKNN--;
 		}
 
-		res = data.getKNN(abfrage[0], numPointsKNN);
+		res = data.getKNN(abfrage[0], 30);
 	}
 
 	if (key == GLFW_KEY_S && action == GLFW_RELEASE)
 	{
+		clock_t begin = clock();
 		points = data.smooth(points, numPointsKNN);
+
+		data = KDTree(points, startDim);
+		clock_t end = clock();
+
+		std::cout << "Time needed to smooth: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
 	}
 }
 

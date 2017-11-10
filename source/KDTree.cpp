@@ -267,3 +267,26 @@ Point3d KDTree::getNN(std::vector<Point3d>& points, int dim)
 	return actual; //Übergabe des ermittelten Wertes
 	//----------------------
 }
+
+std::vector<Point3d> KDTree::smooth(std::vector<Point3d>& points, int strength)
+{
+	std::vector<Point3d> newPoints;
+	std::vector<Point3d> neighborHood;
+	double newX = 0, newY = 0, newZ = 0;
+
+	for each(Point3d point in points)
+	{
+		neighborHood = getKNN(point, strength);
+
+		for each (Point3d nPoint in neighborHood)
+		{
+			newX += nPoint.x;
+			newY += nPoint.y;
+			newZ += nPoint.z;
+		}
+
+		newPoints.emplace_back(Point3d(newX / strength, newY / strength, newZ / strength));
+	}
+
+	return newPoints;
+}

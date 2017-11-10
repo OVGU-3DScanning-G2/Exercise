@@ -80,7 +80,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 {
 	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
 	{
-		//KDTree - Abfrage
+		//KDTree - RangeAbfrage
 		//----------------------------------------------------------------------------
 		abfrage.clear();
 		int random = (std::rand() % (points.size()));
@@ -115,6 +115,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	if (key == GLFW_KEY_UP && action == GLFW_RELEASE)
 	{
 		numPointsKNN++;
+
+		res = data.getKNN(abfrage[0], numPointsKNN);
 	}
 
 	if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
@@ -123,6 +125,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		{
 			numPointsKNN--;
 		}
+
+		res = data.getKNN(abfrage[0], numPointsKNN);
+	}
+
+	if (key == GLFW_KEY_S && action == GLFW_RELEASE)
+	{
+		points = data.smooth(points, numPointsKNN);
 	}
 }
 

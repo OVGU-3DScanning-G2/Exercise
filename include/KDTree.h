@@ -13,6 +13,7 @@ public:
 	KDTree(std::vector<Point3d>& points, int dim = 0);
 	std::vector<Point3d> getRange(double laenge, Point3d& point, int dim);
 	std::vector<Point3d> getKNN(Point3d& point, int k);
+	std::vector<Point3d> smooth(std::vector<Point3d>& points, int strength);
 	Point3d median;
 	KDTree* left;
 	KDTree* right;

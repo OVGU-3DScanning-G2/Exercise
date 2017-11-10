@@ -48,7 +48,7 @@ std::vector<Point3d> points;
 std::vector<Point3d> abfrage;
 KDTree data;
 double abfrageLaenge;
-int numPointsKNN = 14;
+int numPointsKNN = 2;
 int startDim = 0;
 int pointSize = 2;
 //-----------------------------------------

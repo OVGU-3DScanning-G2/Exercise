@@ -48,6 +48,7 @@ std::vector<Point3d> points;
 std::vector<Point3d> abfrage;
 KDTree data;
 double abfrageLaenge;
+int numPointsKNN = 14;
 int startDim = 0;
 int pointSize = 2;
 //-----------------------------------------
@@ -105,10 +106,23 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		res.clear();
 
 		clock_t begin = clock();
-		res = data.getKNN(abfrage[0], 10);
+		res = data.getKNN(abfrage[0], numPointsKNN);
 		clock_t end = clock();
 
 		std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+	}
+
+	if (key == GLFW_KEY_UP && action == GLFW_RELEASE)
+	{
+		numPointsKNN++;
+	}
+
+	if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
+	{
+		if (numPointsKNN > 1)
+		{
+			numPointsKNN--;
+		}
 	}
 }
 

@@ -48,7 +48,7 @@ std::vector<Point3d> points;
 std::vector<Point3d> abfrage;
 KDTree data;
 double abfrageLaenge;
-int numPointsKNN = 2;
+int numNeighborhood = 2;
 int startDim = 0;
 int pointSize = 2;
 //-----------------------------------------
@@ -106,7 +106,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		res.clear();
 
 		clock_t begin = clock();
-		res = data.getKNN(abfrage[0], numPointsKNN);
+		res = data.getKNN(abfrage[0], numNeighborhood);
 		clock_t end = clock();
 
 		std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
@@ -114,27 +114,36 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	if (key == GLFW_KEY_UP && action == GLFW_RELEASE)
 	{
-		numPointsKNN++;
+		numNeighborhood++;
 
-		res = data.getKNN(abfrage[0], numPointsKNN);
+		res = data.getKNN(abfrage[0], numNeighborhood);
 	}
 
 	if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
 	{
-		if (numPointsKNN > 1)
+		if (numNeighborhood > 1)
 		{
-			numPointsKNN--;
+			numNeighborhood--;
 		}
 
-		res = data.getKNN(abfrage[0], numPointsKNN);
+		res = data.getKNN(abfrage[0], numNeighborhood);
 	}
 
 	if (key == GLFW_KEY_S && action == GLFW_RELEASE)
 	{
 		clock_t begin = clock();
-		points = data.smooth(points, numPointsKNN);
+		points = data.smooth(points, numNeighborhood);
 
 		data = KDTree(points, startDim);
+		clock_t end = clock();
+
+		std::cout << "Time needed to smooth: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+	}
+
+	if (key == GLFW_KEY_T && action == GLFW_RELEASE)
+	{
+		clock_t begin = clock();
+		points = data.thinning(points, numNeighborhood);
 		clock_t end = clock();
 
 		std::cout << "Time needed to smooth: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";

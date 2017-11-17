@@ -49,6 +49,7 @@ std::vector<Point3d> points;
 std::vector<Point3d> abfrage;
 KDTree data;
 double abfrageLaenge;
+int numNeighborhood = 2;
 int startDim = 0;
 int pointSize = 2;
 int pointSize_big = pointSize+10;
@@ -79,38 +80,116 @@ void resizeGL(GLFWwindow* window, int width, int height)
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
+	if (key == GLFW_KEY_R && action == GLFW_RELEASE)
 	{
-		//KDTree - Abfrage
-		//----------------------------------------------------------------------------
-		abfrage.clear();
-		int random = (std::rand() % (points.size()));
-		abfrage.emplace_back(points[random]);
-
-		Point3d S = m_bbmax - m_bbmin;
-		abfrageLaenge = S.x * 0.25;
-
+		//try to load point cloud data from file
 		clock_t begin = clock();
-		res = data.getRange(abfrageLaenge, abfrage[0], startDim);
-		clock_t end = clock();
 
-		std::cout << "Time needed to calculate range query: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+		//loadFileXYZ("data/Stanford Dragon.xyz", points);
+		loadFileXYZ("data/cone.xyz", points);
+
+		//Tipp -> #pragma omp parallel for
+
+		clock_t end = clock();
+		std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+
+		//OK, we now compute the min and max coordinates for our bounding box
+		updateScene(points);
+
+		//Load KD-Tree
 		//----------------------------------------------------------------------------
+		begin = clock();
+
+		data = KDTree(points, startDim);
+
+		end = clock();
+		std::cout << "Time needed to build kdTree: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+		//----------------------------------------------------------------------------
+
+		/* Make the window's context current */
+		glfwMakeContextCurrent(window);
+
+		//Prepare our virtual camera
+		glfwGetFramebufferSize(window, &m_windowWidth, &m_windowHeight);
+
+		//Initialize Camera
+		m_camera.setWindowSize(m_windowWidth, m_windowHeight);    //setup window parameters
+		m_camera.initializeCamera(m_sceneCenter, m_sceneRadius);  //set the camera outside the scene
+		m_camera.updateProjection();                              //adjust projection to window size
 	}
 
-	if (key == GLFW_KEY_N && action == GLFW_RELEASE)
+	if (!points.empty())
 	{
-		abfrage.clear();
-		int random = (std::rand() % (points.size()));
-		abfrage.emplace_back(points[random]);
+		if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
+		{
+			//KDTree - RangeAbfrage
+			//----------------------------------------------------------------------------
+			abfrage.clear();
+			int random = (std::rand() % (points.size()));
+			abfrage.emplace_back(points[random]);
 
-		res.clear();
+			Point3d S = m_bbmax - m_bbmin;
+			abfrageLaenge = S.x * 0.25;
 
-		clock_t begin = clock();
-		res.emplace_back(data.getNN(abfrage[0]));
-		clock_t end = clock();
+			clock_t begin = clock();
+			res = data.getRange(abfrageLaenge, abfrage[0], startDim);
+			clock_t end = clock();
 
-		std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+			std::cout << "Time needed to calculate range query: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+			//----------------------------------------------------------------------------
+		}
+
+		if (key == GLFW_KEY_N && action == GLFW_RELEASE)
+		{
+			abfrage.clear();
+			int random = (std::rand() % (points.size()));
+			abfrage.emplace_back(points[random]);
+
+			res.clear();
+
+			clock_t begin = clock();
+			res = data.getKNN(abfrage[0], numNeighborhood);
+			clock_t end = clock();
+
+			std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+		}
+
+		if (key == GLFW_KEY_UP && action == GLFW_RELEASE)
+		{
+			numNeighborhood++;
+
+			res = data.getKNN(abfrage[0], numNeighborhood);
+		}
+
+		if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
+		{
+			if (numNeighborhood > 1)
+			{
+				numNeighborhood--;
+			}
+
+			res = data.getKNN(abfrage[0], numNeighborhood);
+		}
+
+		if (key == GLFW_KEY_S && action == GLFW_RELEASE)
+		{
+			clock_t begin = clock();
+			points = data.smooth(points, numNeighborhood);
+
+			data = KDTree(points, startDim);
+			clock_t end = clock();
+
+			std::cout << "Time needed to smooth: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+		}
+
+		if (key == GLFW_KEY_T && action == GLFW_RELEASE)
+		{
+			clock_t begin = clock();
+			points = data.thinning(points, numNeighborhood);
+			clock_t end = clock();
+
+			std::cout << "Time needed to smooth: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+		}
 	}
 }
 

@@ -183,21 +183,21 @@ Point3d KDTree::getNN(std::vector<Point3d>& points, int dim)
 
 	// go back if below leaf
 	if (this == NULL)
-		return Point3d(DBL_MAX, DBL_MAX, DBL_MAX); //Rückgabe von Unendlich beim Ankommen vom Ende des KDTree
+		return Point3d(DBL_MAX, DBL_MAX, DBL_MAX);
 
 	// go back if current leaf == point
 	if (left == NULL && right == NULL)
 	{
 		if (samePointInVector(*median, points))
-			return Point3d(DBL_MAX, DBL_MAX, DBL_MAX); //Rückgabe von Unendlich beim Ankommen vom
+			return Point3d(DBL_MAX, DBL_MAX, DBL_MAX); //RÃ¼ckgabe von Unendlich beim Ankommen vom
 														//Blatt des KDTree (Punkt ist angefragter Punkt)
 		else
-			return *median; //Rückgabe des Punktes, wenn bei Blatt angekommen (nicht der angefragter Punkt)
+			return *median; //RÃ¼ckgabe des Punktes, wenn bei Blatt angekommen (nicht der angefragter Punkt)
 	}
 
 	bool goLeft = false;
 
-	switch (dim) //Überprüfung, ob nach links gegangen werden muss oder nach rechts
+	switch (dim) //ÃœberprÃ¼fung, ob nach links gegangen werden muss oder nach rechts
 	{
 	case 0:
 		if (points.front().x <= median->x) //X
@@ -217,11 +217,11 @@ Point3d KDTree::getNN(std::vector<Point3d>& points, int dim)
 
 	if (goLeft)
 	{
-		actual = left->getNN(points, (dim + 1) % 3); //Ermittlung des nähesten Punktes im linken Teil
+		actual = left->getNN(points, (dim + 1) % 3); //Ermittlung des nÃ¤hesten Punktes im linken Teil
 	}
 	else
 	{
-		actual = right->getNN(points, (dim + 1) % 3); //Ermittlung des nähesten Punktes im rechten Teil
+		actual = right->getNN(points, (dim + 1) % 3); //Ermittlung des nÃ¤hesten Punktes im rechten Teil
 	}
 	//----------------------
 
@@ -230,7 +230,7 @@ Point3d KDTree::getNN(std::vector<Point3d>& points, int dim)
 	double minDist = euclid(actual, points.front()); //Distanz zwischen ermitteltem Punkt und angefragten Punkt
 	bool oldGoLeft = goLeft;
 
-	switch(dim) //Überprüfung ob es Punkte im anderen Teilbaum gibt, die näher seien könnten
+	switch(dim) //ÃœberprÃ¼fung ob es Punkte im anderen Teilbaum gibt, die nÃ¤her seien kÃ¶nnten
 	{
 	case 0:
 		if (abs(median->x - points.front().x) <= minDist) //X
@@ -252,27 +252,27 @@ Point3d KDTree::getNN(std::vector<Point3d>& points, int dim)
 		break;
 	}
 
-	if (oldGoLeft != goLeft) //Ermittlung des Punkte im anderen Teilbaums der dem angefragten Punkt am nächsten ist
+	if (oldGoLeft != goLeft) //Ermittlung des Punkte im anderen Teilbaums der dem angefragten Punkt am nÃ¤chsten ist
 	{
 		Point3d otherBranchPoint;
 
 		if (goLeft)
 		{
-			otherBranchPoint = left->getNN(points, (dim + 1) % 3); //Ermittlung des Punktes für den linken Teilbaum
+			otherBranchPoint = left->getNN(points, (dim + 1) % 3); //Ermittlung des Punktes fÃ¼r den linken Teilbaum
 		}
 		else
 		{
-			otherBranchPoint = right->getNN(points, (dim + 1) % 3); //Ermittlung des Punktes für den rechten Teilbaum
+			otherBranchPoint = right->getNN(points, (dim + 1) % 3); //Ermittlung des Punktes fÃ¼r den rechten Teilbaum
 		}
 
 		if (euclid(otherBranchPoint, points.front()) < euclid(actual, points.front()) && !samePointInVector(otherBranchPoint, points))
-			actual = otherBranchPoint; //Übernahme des Punktes, wenn er näher ist als der andere
+			actual = otherBranchPoint; //Ãœbernahme des Punktes, wenn er nÃ¤her ist als der andere
 	}
 
 	if (euclid(*median, points.front()) < euclid(actual, points.front()) && !samePointInVector(*median, points))
-		actual = *median; //Übernhame des Medians, sollte dieser noch näher dran sein
+		actual = *median; //Ãœbernhame des Medians, sollte dieser noch nÃ¤her dran sein
 
-	return actual; //Übergabe des ermittelten Wertes
+	return actual; //Ãœbergabe des ermittelten Wertes
 	//----------------------
 }
 

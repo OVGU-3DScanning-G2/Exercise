@@ -52,6 +52,7 @@ double abfrageLaenge;
 int numNeighborhood = 2;
 int startDim = 0;
 int pointSize = 2;
+int pointSize_big = pointSize+10;
 //-----------------------------------------
 
 int m_windowWidth = 0;
@@ -235,9 +236,11 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 {
 	std::cout 	<< "usage 3ds_01_1 [ -nn <x> <y> <z> | -range <x> <y> <z> ] [-f <filename>]" << std::endl \
 				<< std::endl \
-				<< "	--nn <x> <y> <z>          -   find Nearest Neighbour for <x;y;z>" << std::endl \
-				<< "	--range <r> <x> <y> <z>   -   highlight range <r> around <x;y;z>" << std::endl \
-				<< "	-f <filename>             -   load specific xyz-File" << std::endl;
+				<< "	--nn <x> <y> <z>           -   find Nearest Neighbour for <x;y;z>" << std::endl \
+				<< "	--range <r> <x> <y> <z>    -   highlight range <r> around <x;y;z>" << std::endl \
+				<< "	-f <filename>              -   load specific xyz-File" << std::endl\
+				<< "    --pointSizes <small> <big> -   set sizes for drawing points" << std::endl\
+				<< std::endl;
 
 	std::string job = "";
 	double x = 0, y = 0, z = 0, r = 0;
@@ -268,6 +271,11 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 				y = std::stod(std::string(argv[i]));
 				i++;
 				z = std::stod(std::string(argv[i]));
+			} else if ( option == "--pointSizes" ){
+				i++;
+				pointSize = std::stod(std::string(argv[i]));
+				i++;
+				pointSize_big = std::stod(std::string(argv[i]));
 			}
 		}
 	}
@@ -389,12 +397,12 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
 		//draw abfrage
 		//----------------------------------------------------------------------------
-		drawPoints(abfrage, pointSize + 10, 255, 165, 0);
+		drawPoints(abfrage, pointSize_big, 255, 165, 0);
 		//----------------------------------------------------------------------------
 
 		//draw res-points
 		//----------------------------------------------------------------------------
-		drawPoints(res, pointSize + 10, 255, 0, 0);
+		drawPoints(res, pointSize_big, 255, 0, 0);
 		//----------------------------------------------------------------------------
 
 		//draw bounding box for Abfrage

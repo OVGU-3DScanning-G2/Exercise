@@ -185,7 +185,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		if (key == GLFW_KEY_T && action == GLFW_RELEASE)
 		{
 			clock_t begin = clock();
-			points = data.thinning(points, numNeighborhood);
+            res = data.thinning(points, 2.5);
 			clock_t end = clock();
 
 			std::cout << "Time needed to smooth: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
@@ -361,22 +361,22 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
 		std::cout << "Time needed to calculate range query: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
 		//----------------------------------------------------------------------------
-	} else if(job == "nn"){
-		Point3d S(x, y, z);
+    } else if(job == "nn"){
+        Point3d S(x, y, z);
 
-		std::cout << "calculating nearest Neighbour for Point <" << S.x << " " << S.y << " " << S.z << ">" << std::endl;
+        std::cout << "calculating nearest Neighbour for Point <" << S.x << " " << S.y << " " << S.z << ">" << std::endl;
 
-		abfrage.clear();
-		res.clear();
+        abfrage.clear();
+        res.clear();
 
-		abfrage.emplace_back(S);
+        abfrage.emplace_back(S);
 
-		clock_t begin = clock();
-		res.emplace_back(data.getNN(abfrage[0]));
-		clock_t end = clock();
+        clock_t begin = clock();
+//		res.emplace_back(data.getNN(abfrage[0]));
+        clock_t end = clock();
 
-		std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
-	}
+        std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+    }
 
 
 	/* Loop until the user closes the window */

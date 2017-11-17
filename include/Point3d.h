@@ -29,6 +29,7 @@ struct Point3d
   Point3d& operator *= (double scalar);     // *= multiplication with a scalar (pt1*= s  -> pt1 = pt1 * s)
 
   double x,y,z;
+  bool thinnedOut = false;
 };
 
 double  sqr(double value);                                  ///< returns the square of a value

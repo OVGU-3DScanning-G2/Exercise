@@ -130,6 +130,68 @@ std::vector<Point3d> KDTree::getRange(double laenge, Point3d& point, int dim)
 }
 
 
+// Marks neighbours in range of a point as not interesting to show. used for thinning
+
+std::vector<Point3d> KDTree::markNeighboursInRange(double laenge, Point3d& point, int dim)
+{
+    std::vector<Point3d> res = std::vector<Point3d>();
+
+    bool checkLeft = false;
+    bool checkRight = false;
+
+    switch (dim)
+    {
+    case 0:
+        if (median->x >= point.x - laenge)
+            checkLeft = true;
+        if (median->x <= point.x + laenge)
+            checkRight = true;
+        break;
+    case 1:
+        if (median->y >= point.y - laenge)
+            checkLeft = true;
+        if (median->y <= point.y + laenge)
+            checkRight = true;
+        break;
+    case 2:
+        if (median->z >= point.z - laenge)
+            checkLeft = true;
+        if (median->z <= point.z + laenge)
+            checkRight = true;
+        break;
+    }
+
+    if (checkLeft && left != NULL)
+    {
+        std::vector<Point3d> res2 = left->getRange(laenge, point, (dim + 1) % 3);
+        res.insert(res.end(), res2.begin(), res2.end());
+    }
+
+    if (checkRight && right != NULL)
+    {
+        std::vector<Point3d> res2 = right->getRange(laenge, point, (dim + 1) % 3);
+        res.insert(res.end(), res2.begin(), res2.end());
+    }
+
+    if ((left == NULL && right == NULL) || (checkLeft && checkRight))
+    {
+        bool push = false;
+
+        if (median->x >= point.x - laenge && median->x <= point.x + laenge && median->y >= point.y - laenge && median->y <= point.y + laenge
+            && median->z >= point.z - laenge && median->z <= point.z + laenge)
+            push = true;
+
+        if(push){
+            (this->median)->thinnedOut = true;
+            res.emplace_back(*(this->median));
+        }
+    }
+
+    return res;
+}
+
+
+
 double euclid(Point3d& p1, Point3d& p2)
 {
 	return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2) + pow(p1.z - p2.z, 2));
@@ -318,11 +380,22 @@ std::vector<Point3d> KDTree::smooth(std::vector<Point3d>& points, int strength)
 	return newPoints;
 }
 
-std::vector<Point3d> KDTree::thinning(std::vector<Point3d>& points, int strength)
+std::vector<Point3d> KDTree::thinning(std::vector<Point3d>& points, double distance)
 {
-	std::vector<Point3d> newPoints;
 
+//    reset flags
+    for(Point3d point: points)
+        point.thinnedOut = false;
+	std::vector<Point3d> newPoints;
+    bool flags[points.size()];
+    for(Point3d point : points)
+        if(!point.thinnedOut)
+        {
+            this->markNeighboursInRange(distance,point, 0);
+            newPoints.emplace_back(point);
+        }
 
 
 	return newPoints;
+
 }

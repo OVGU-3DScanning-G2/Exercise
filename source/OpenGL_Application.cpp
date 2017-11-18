@@ -84,7 +84,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		clock_t begin = clock();
 
 		//loadFileXYZ("data/Stanford Dragon.xyz", points);
-		loadFileXYZ("data/cone.xyz", points);
+		loadFileXYZ("data/Stanford Bunny.xyz", points);
 
 		//Tipp -> #pragma omp parallel for
 
@@ -183,10 +183,12 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		if (key == GLFW_KEY_T && action == GLFW_RELEASE)
 		{
 			clock_t begin = clock();
-			points = data.thinning(points, numNeighborhood);
+			data.thinning(points, numNeighborhood);
 			clock_t end = clock();
 
-			std::cout << "Time needed to smooth: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+			data = KDTree(points, startDim);
+
+			std::cout << "Time needed to thinn: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
 		}
 	}
 }

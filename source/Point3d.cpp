@@ -57,6 +57,14 @@ Point3d& Point3d::operator *= (double scalar)
   return *this;
 }
 
+bool Point3d::operator == (const Point3d& p2)
+{
+	if (x == p2.x && y == p2.y && z == p2.z)
+		return true;
+	else
+		return false;
+}
+
 
 
 

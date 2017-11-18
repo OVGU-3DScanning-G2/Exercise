@@ -14,12 +14,12 @@ public:
 	std::vector<Point3d> getRange(double laenge, Point3d& point, int dim);
 	std::vector<Point3d> getKNN(Point3d& point, int k);
 	std::vector<Point3d> smooth(std::vector<Point3d>& points, int strength);
-	std::vector<Point3d> thinning(std::vector<Point3d>& points, int strength);
+	void thinning(std::vector<Point3d>& points, int strength);
 	Point3d* median;
 	KDTree* left;
 	KDTree* right;
 protected:
 	// dim: dimension to spit at
 private:
-	Point3d getNN(std::vector<Point3d>& point, int dim);
+	void getNN(Point3d& point, std::vector<Point3d>& neighbours, int k, int dim);
 };

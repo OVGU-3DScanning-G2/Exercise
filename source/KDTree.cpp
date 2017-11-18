@@ -1,5 +1,6 @@
 #include "include/KDTree.h"
 #include <random>
+static Point3d searchPoint;
 
 bool sortByXvalue(const Point3d& p1, const Point3d& p2)
 {
@@ -130,24 +131,16 @@ std::vector<Point3d> KDTree::getRange(double laenge, Point3d& point, int dim)
 }
 
 
-double euclid(Point3d& p1, Point3d& p2)
+static double euclid(Point3d& p1, Point3d& p2)
 {
 	return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2) + pow(p1.z - p2.z, 2));
-}
-
-bool samePoints(Point3d& p1, Point3d& p2)
-{
-	if (p1.x == p2.x && p1.y == p2.y && p1.z == p2.z)
-		return true;
-	else
-		return false;
 }
 
 bool samePointInVector(Point3d& p, std::vector<Point3d>& points)
 {
 	for each (Point3d point in points)
 	{
-		if (samePoints(p, point))
+		if (p == point)
 			return true;
 	}
 
@@ -163,33 +156,50 @@ std::vector<Point3d> KDTree::getKNN(Point3d& point, int k)
 		std::cout << "Automatically set k to 1, because it was smaller than 1." << std::endl;
 	}
 
-	std::vector<Point3d> points{point};
+	searchPoint = point;
 
-	for (int i = 0; i < k; i++)
-	{
-		points.emplace_back(getNN(points, 0));
-	}
+	std::vector<Point3d> neighbours{Point3d(DBL_MAX, DBL_MAX, DBL_MAX)};
 
-	points.erase(points.begin());
+	getNN(point, neighbours, k, 0);
 
-	return points;
+	return neighbours;
 }
 
+bool sortWithSearchPoint(Point3d& p1, Point3d& p2)
+{
+	return (euclid(p1, searchPoint) < euclid(p2, searchPoint));
+}
 
-Point3d KDTree::getNN(std::vector<Point3d>& points, int dim)
+void insertNeighbour(Point3d& insertPoint, std::vector<Point3d>& neighbours, int k)
+{
+	neighbours.push_back(insertPoint);
+
+	//Sortieren
+	std::sort(neighbours.begin(), neighbours.end(), sortWithSearchPoint);
+
+	if (neighbours.size() > k)
+		neighbours.pop_back();
+}
+
+void KDTree::getNN(Point3d& point, std::vector<Point3d>& neighbours, int k, int dim)
 {
 	//Rekursion nach unten
 	//----------------------
 	if (this == NULL)
-		return Point3d(DBL_MAX, DBL_MAX, DBL_MAX); //Rückgabe von Unendlich beim Ankommen vom Ende des KDTree
+		return; //Rückgabe von Unendlich beim Ankommen vom Ende des KDTree
 
 	if (left == NULL && right == NULL)
 	{
-		if (samePointInVector(*median, points))
-			return Point3d(DBL_MAX, DBL_MAX, DBL_MAX); //Rückgabe von Unendlich beim Ankommen vom
-														//Blatt des KDTree (Punkt ist angefragter Punkt)
+		if (point == *median)
+		{
+			return;													  //Rückgabe von Unendlich beim Ankommen vom
+																	  //Blatt des KDTree (Punkt ist angefragter Punkt)
+		}
 		else
-			return *median; //Rückgabe des Punktes, wenn bei Blatt angekommen (nicht der angefragter Punkt)
+		{
+			insertNeighbour(*median, neighbours, k);
+			return; //Rückgabe des Punktes, wenn bei Blatt angekommen (nicht der angefragter Punkt)
+		}
 	}
 
 	bool goLeft = false;
@@ -197,52 +207,52 @@ Point3d KDTree::getNN(std::vector<Point3d>& points, int dim)
 	switch (dim) //Überprüfung, ob nach links gegangen werden muss oder nach rechts
 	{
 	case 0:
-		if (points.front().x <= median->x) //X
+		if (point.x <= median->x) //X
 			goLeft = true;
 		break;
 	case 1:
-		if (points.front().y <= median->y) //Y
+		if (point.y <= median->y) //Y
 			goLeft = true;
 		break;
 	case 2:
-		if (points.front().z <= median->z) //Z
+		if (point.z <= median->z) //Z
 			goLeft = true;
 		break;
 	}
 
-	Point3d actual;
+	//Point3d actual;
 
 	if (goLeft)
 	{
-		actual = left->getNN(points, (dim + 1) % 3); //Ermittlung des nähesten Punktes im linken Teil
+		left->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des nähesten Punktes im linken Teil
 	}
 	else
 	{
-		actual = right->getNN(points, (dim + 1) % 3); //Ermittlung des nähesten Punktes im rechten Teil
+		right->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des nähesten Punktes im rechten Teil
 	}
 	//----------------------
 
 	//Recursion nach oben
 	//----------------------
-	double minDist = euclid(actual, points.front()); //Distanz zwischen ermitteltem Punkt und angefragten Punkt
+	double maxMinDist = euclid(neighbours.back(), point); //Distanz zwischen ermitteltem Punkt und angefragten Punkt
 	bool oldGoLeft = goLeft;
 
 	switch(dim) //Überprüfung ob es Punkte im anderen Teilbaum gibt, die näher seien könnten
 	{
 	case 0:
-		if (abs(median->x - points.front().x) <= minDist) //X
+		if (abs(median->x - point.x) <= maxMinDist) //X
 		{
 			goLeft = !goLeft;
 		}
 		break;
 	case 1:
-		if (abs(median->y - points.front().y) <= minDist) //Y
+		if (abs(median->y - point.y) <= maxMinDist) //Y
 		{
 			goLeft = !goLeft;
 		}
 		break;
 	case 2:
-		if (abs(median->z - points.front().z) <= minDist) //Z
+		if (abs(median->z - point.z) <= maxMinDist) //Z
 		{
 			goLeft = !goLeft;
 		}
@@ -251,25 +261,26 @@ Point3d KDTree::getNN(std::vector<Point3d>& points, int dim)
 
 	if (oldGoLeft != goLeft) //Ermittlung des Punkte im anderen Teilbaums der dem angefragten Punkt am nächsten ist
 	{
-		Point3d otherBranchPoint;
+		//Point3d otherBranchPoint;
 
 		if (goLeft)
 		{
-			otherBranchPoint = left->getNN(points, (dim + 1) % 3); //Ermittlung des Punktes für den linken Teilbaum
+			left->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des Punktes für den linken Teilbaum
 		}
 		else
 		{
-			otherBranchPoint = right->getNN(points, (dim + 1) % 3); //Ermittlung des Punktes für den rechten Teilbaum
+			right->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des Punktes für den rechten Teilbaum
 		}
 
-		if (euclid(otherBranchPoint, points.front()) < euclid(actual, points.front()) && !samePointInVector(otherBranchPoint, points))
-			actual = otherBranchPoint; //Übernahme des Punktes, wenn er näher ist als der andere
+		//if (euclid(otherBranchPoint, point) < euclid(actual, point) && !samePointInVector(otherBranchPoint, neighbours))
+		//	actual = otherBranchPoint; //Übernahme des Punktes, wenn er näher ist als der andere
 	}
 
-	if (euclid(*median, points.front()) < euclid(actual, points.front()) && !samePointInVector(*median, points))
-		actual = *median; //Übernhame des Medians, sollte dieser noch näher dran sein
+	if (euclid(*median, point) < maxMinDist && !(*median == point))
+		insertNeighbour(*median, neighbours, k); //Übernhame des Medians, sollte dieser noch näher dran sein
 
-	return actual; //Übergabe des ermittelten Wertes
+	//inserNeighbour(actual, neighbours, k);
+	return; //Übergabe des ermittelten Wertes
 	//----------------------
 }
 
@@ -315,11 +326,20 @@ std::vector<Point3d> KDTree::smooth(std::vector<Point3d>& points, int strength)
 	return newPoints;
 }
 
-std::vector<Point3d> KDTree::thinning(std::vector<Point3d>& points, int strength)
+void KDTree::thinning(std::vector<Point3d>& points, int strength)
 {
-	std::vector<Point3d> newPoints;
+	//Diese Methode ist noch fehlerhaft
+	/*for each(Point3d point in points)
+	{
+		for each (Point3d npoint in getKNN(point, strength))
+		{
+			int pos = std::find(points.begin(), points.end(), npoint) - points.begin();
 
-
-
-	return newPoints;
+			if (pos < points.size())
+			{
+				points.erase(points.begin() + pos);
+				std::cout << "deleted point. Remaining:" << points.size() << std::endl;
+			}
+		}
+	}*/
 }

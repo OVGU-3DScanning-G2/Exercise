@@ -4,7 +4,7 @@
 #include <vector>
 #include <iostream>
 
-#include "include/Point3d.h"
+#include "Point3d.h"
 
 class KDTree
 {

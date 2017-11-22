@@ -9,15 +9,18 @@
 #include <algorithm>  //for std::sort
 #include <stdio.h>
 #include <ctime>
+#ifdef __linux__
+#include <fstream>
+#endif
 
 #define GLFW_INCLUDE_GLU
 #include "GLFW/glfw3.h" //inlcude the function definition
 
 #include <GL/glu.h>
 
-#include "GLcamera.h"
-#include "Point3d.h"
-#include "KDTree.h"
+#include "../include/GLcamera.h"
+#include "../include/Point3d.h"
+#include "../include/KDTree.h"
 
 //Normally compiler & linker options are set in the project file and not in the source code
 //Its just here to show what dependencies are needed
@@ -134,7 +137,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			ptrRes = data.getRange(abfrageLaenge, abfrage[0], startDim);
 
 			res.clear();
-			for each(Point3d* point in ptrRes)
+			for(Point3d* point : ptrRes)
 			{
 				res.emplace_back(*point);
 			}
@@ -157,7 +160,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			ptrRes = data.getKNN(abfrage[0], numNeighborhood);
 
 			res.clear();
-			for each(Point3d* point in ptrRes)
+			for(Point3d* point : ptrRes)
 			{
 				res.emplace_back(*point);
 			}
@@ -173,7 +176,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			ptrRes = data.getKNN(abfrage[0], numNeighborhood);
 
 			res.clear();
-			for each(Point3d* point in ptrRes)
+			for(Point3d* point : ptrRes)
 			{
 				res.emplace_back(*point);
 			}
@@ -189,7 +192,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			ptrRes = data.getKNN(abfrage[0], numNeighborhood);
 
 			res.clear();
-			for each(Point3d* point in ptrRes)
+			for(Point3d* point : ptrRes)
 			{
 				res.emplace_back(*point);
 			}
@@ -428,6 +431,25 @@ void updateScene(const std::vector<Point3d>& points)
 //Here is the implementation of our file reader
 void loadFileXYZ(const char* filename, std::vector<Point3d>& points)
 {
+#ifdef __linux__
+    points.clear();
+    std::ifstream file(filename);
+    if(!file)
+    {
+        std::cout << "File not found\t " << filename << " is unavailable." << std::endl;
+        return;
+    }
+
+    std::cout << "reading file: " << filename << std::endl;
+    double a,b,c;
+    while(file >> a >> b >> c)
+//        points.push_back(Point3d(a,b,c));
+        points.emplace_back(a,b,c);// equal to the cmd above
+
+    size_t numberOfPoints = points.size();
+    std::cout << "reading finished: " << numberOfPoints << " points have be read" << std::endl;
+
+#elif _WIN32
 	FILE* file = 0;
 	int error = fopen_s(&file, filename, "rt"); //r= read, t=text
 	if (error != 0)
@@ -462,6 +484,9 @@ void loadFileXYZ(const char* filename, std::vector<Point3d>& points)
 	unsigned int numberOfPoints = points.size();
 
 	std::cout << "reading finished: " << numberOfPoints << " points have be read" << std::endl;
+#else
+	std::cout << "No file loading implemented for this OS." << std::endl;
+#endif
 }
 
 /** draws a unit box.

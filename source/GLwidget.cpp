@@ -1,4 +1,4 @@
-#include "include/GLwidget.h"
+#include "../include/GLwidget.h"
 #include <GL/glu.h>
 #include <QtGui/QMouseEvent>
 #include <cmath>

@@ -30,6 +30,7 @@ struct Point3d
   bool operator == (const Point3d& p2);
 
   double x,y,z;
+  bool thinned = false;
 };
 
 double  sqr(double value);                                  ///< returns the square of a value

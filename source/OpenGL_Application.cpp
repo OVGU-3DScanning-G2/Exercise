@@ -44,6 +44,7 @@ Point3d  m_bbmin, m_bbmax;//bounding box
 //Own Variables
 //-----------------------------------------
 std::vector<Point3d> res;
+std::vector<Point3d*> ptrRes;
 std::vector<Point3d> points;
 std::vector<Point3d> abfrage;
 KDTree data;
@@ -130,7 +131,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			abfrageLaenge = S.x * 0.25;
 
 			clock_t begin = clock();
-			res = data.getRange(abfrageLaenge, abfrage[0], startDim);
+			ptrRes = data.getRange(abfrageLaenge, abfrage[0], startDim);
+
+			res.clear();
+			for each(Point3d* point in ptrRes)
+			{
+				res.emplace_back(*point);
+			}
+
 			clock_t end = clock();
 
 			std::cout << "Time needed to calculate range query: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
@@ -146,7 +154,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			res.clear();
 
 			clock_t begin = clock();
-			res = data.getKNN(abfrage[0], numNeighborhood);
+			ptrRes = data.getKNN(abfrage[0], numNeighborhood);
+
+			res.clear();
+			for each(Point3d* point in ptrRes)
+			{
+				res.emplace_back(*point);
+			}
 			clock_t end = clock();
 
 			std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
@@ -156,7 +170,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		{
 			numNeighborhood++;
 
-			res = data.getKNN(abfrage[0], numNeighborhood);
+			ptrRes = data.getKNN(abfrage[0], numNeighborhood);
+
+			res.clear();
+			for each(Point3d* point in ptrRes)
+			{
+				res.emplace_back(*point);
+			}
 		}
 
 		if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
@@ -166,7 +186,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 				numNeighborhood--;
 			}
 
-			res = data.getKNN(abfrage[0], numNeighborhood);
+			ptrRes = data.getKNN(abfrage[0], numNeighborhood);
+
+			res.clear();
+			for each(Point3d* point in ptrRes)
+			{
+				res.emplace_back(*point);
+			}
 		}
 
 		if (key == GLFW_KEY_S && action == GLFW_RELEASE)
@@ -183,11 +209,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		if (key == GLFW_KEY_T && action == GLFW_RELEASE)
 		{
 			clock_t begin = clock();
-			data.thinning(points, numNeighborhood);
+
+			data.thinning(numNeighborhood);
+			points = data.getNotThinnedPoints();
 			clock_t end = clock();
 
 			data = KDTree(points, startDim);
 
+			std::cout << points.size() << " points left." << std::endl;
 			std::cout << "Time needed to thinn: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
 		}
 	}

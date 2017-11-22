@@ -74,9 +74,9 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 	}
 }
 
-std::vector<Point3d> KDTree::getRange(double laenge, Point3d& point, int dim)
+std::vector<Point3d*> KDTree::getRange(double laenge, Point3d& point, int dim)
 {
-	std::vector<Point3d> res = std::vector<Point3d>();
+	std::vector<Point3d*> res = std::vector<Point3d*>();
 
 	bool checkLeft = false;
 	bool checkRight = false;
@@ -105,13 +105,13 @@ std::vector<Point3d> KDTree::getRange(double laenge, Point3d& point, int dim)
 
 	if (checkLeft && left != NULL)
 	{
-		std::vector<Point3d> res2 = left->getRange(laenge, point, (dim + 1) % 3);
+		std::vector<Point3d*> res2 = left->getRange(laenge, point, (dim + 1) % 3);
 		res.insert(res.end(), res2.begin(), res2.end());
 	}
 
 	if (checkRight && right != NULL)
 	{
-		std::vector<Point3d> res2 = right->getRange(laenge, point, (dim + 1) % 3);
+		std::vector<Point3d*> res2 = right->getRange(laenge, point, (dim + 1) % 3);
 		res.insert(res.end(), res2.begin(), res2.end());
 	}
 
@@ -124,7 +124,7 @@ std::vector<Point3d> KDTree::getRange(double laenge, Point3d& point, int dim)
 			push = true;
 
 		if(push)
-			res.emplace_back(*(this->median));
+			res.emplace_back(this->median);
 	}
 
 	return res;
@@ -148,7 +148,7 @@ bool samePointInVector(Point3d& p, std::vector<Point3d>& points)
 }
 
 
-std::vector<Point3d> KDTree::getKNN(Point3d& point, int k)
+std::vector<Point3d*> KDTree::getKNN(Point3d& point, int k)
 {
 	if (k < 1)
 	{
@@ -158,21 +158,21 @@ std::vector<Point3d> KDTree::getKNN(Point3d& point, int k)
 
 	searchPoint = point;
 
-	std::vector<Point3d> neighbours{Point3d(DBL_MAX, DBL_MAX, DBL_MAX)};
+	std::vector<Point3d*> neighbours{&Point3d(DBL_MAX, DBL_MAX, DBL_MAX)};
 
 	getNN(point, neighbours, k, 0);
 
 	return neighbours;
 }
 
-bool sortWithSearchPoint(Point3d& p1, Point3d& p2)
+bool sortWithSearchPoint(Point3d* p1, Point3d* p2)
 {
-	return (euclid(p1, searchPoint) < euclid(p2, searchPoint));
+	return (euclid(*p1, searchPoint) < euclid(*p2, searchPoint));
 }
 
-void insertNeighbour(Point3d& insertPoint, std::vector<Point3d>& neighbours, int k)
+void insertNeighbour(Point3d& insertPoint, std::vector<Point3d*>& neighbours, int k)
 {
-	neighbours.push_back(insertPoint);
+	neighbours.push_back(&insertPoint);
 
 	//Sortieren
 	std::sort(neighbours.begin(), neighbours.end(), sortWithSearchPoint);
@@ -181,7 +181,7 @@ void insertNeighbour(Point3d& insertPoint, std::vector<Point3d>& neighbours, int
 		neighbours.pop_back();
 }
 
-void KDTree::getNN(Point3d& point, std::vector<Point3d>& neighbours, int k, int dim)
+void KDTree::getNN(Point3d& point, std::vector<Point3d*>& neighbours, int k, int dim)
 {
 	//Rekursion nach unten
 	//----------------------
@@ -234,7 +234,7 @@ void KDTree::getNN(Point3d& point, std::vector<Point3d>& neighbours, int k, int 
 
 	//Recursion nach oben
 	//----------------------
-	double maxMinDist = euclid(neighbours.back(), point); //Distanz zwischen ermitteltem Punkt und angefragten Punkt
+	double maxMinDist = euclid(*(neighbours.back()), point); //Distanz zwischen ermitteltem Punkt und angefragten Punkt
 	bool oldGoLeft = goLeft;
 
 	switch(dim) //Überprüfung ob es Punkte im anderen Teilbaum gibt, die näher seien könnten
@@ -288,23 +288,23 @@ void KDTree::getNN(Point3d& point, std::vector<Point3d>& neighbours, int k, int 
 std::vector<Point3d> KDTree::smooth(std::vector<Point3d>& points, int strength)
 {
 	std::vector<Point3d> newPoints;
-	std::vector<Point3d> neighborHood;
+	std::vector<Point3d*> neighborHood;
 	double newX = 0, newY = 0, newZ = 0;
 
 	for(int i = 0; (unsigned)i < (unsigned)points.size(); i++)
 	{
 		neighborHood = getKNN(points[i], strength);
 
-		double maxdist = euclid(points[i], neighborHood.back());
+		double maxdist = euclid(points[i], *neighborHood.back());
 		double gewicht = 0;
 		double sumGewichte = 0;
 
 		for(int j = 0; (unsigned)j < (unsigned)neighborHood.size(); j++)
 		{
-			gewicht = exp(-1 * euclid(neighborHood[j], points[i]) / maxdist);
-			newX += neighborHood[j].x * gewicht;
-			newY += neighborHood[j].y * gewicht;
-			newZ += neighborHood[j].z * gewicht;
+			gewicht = exp(-1 * euclid(*neighborHood[j], points[i]) / maxdist);
+			newX += neighborHood[j]->x * gewicht;
+			newY += neighborHood[j]->y * gewicht;
+			newZ += neighborHood[j]->z * gewicht;
 
 			sumGewichte += gewicht;
 		}
@@ -326,20 +326,58 @@ std::vector<Point3d> KDTree::smooth(std::vector<Point3d>& points, int strength)
 	return newPoints;
 }
 
-void KDTree::thinning(std::vector<Point3d>& points, int strength)
+void KDTree::thinning(int strength)
 {
-	//Diese Methode ist noch fehlerhaft
-	/*for each(Point3d point in points)
+	//Diese Methode ist fehlerhaft (Springt für jeden Punkt rein, bis auf einen???, obwohl diese im KDTree richtig markiert werden)
+	/*for (int i = 0; i < points.size(); i++)
 	{
-		for each (Point3d npoint in getKNN(point, strength))
+		if (points[i].thinned == false)
 		{
-			int pos = std::find(points.begin(), points.end(), npoint) - points.begin();
+			std::vector<Point3d*> neighbours = getKNN(points[i], strength);
 
-			if (pos < points.size())
+			for (int j = 0; j < neighbours.size(); j++)
 			{
-				points.erase(points.begin() + pos);
-				std::cout << "deleted point. Remaining:" << points.size() << std::endl;
+				neighbours[j]->thinned = true;
 			}
 		}
+		else
+		{
+			std::cout << "Point already thinned" << std::endl;
+		}
 	}*/
+
+	if (this == NULL)
+		return;
+
+	if (median->thinned == false)
+	{
+		std::vector<Point3d*> neighbours = getKNN(*median, strength);
+
+		for(Point3d* point : neighbours)
+		{
+			point->thinned = true;
+		}
+	}
+
+	left->thinning(strength);
+	right->thinning(strength);
+}
+
+std::vector<Point3d> KDTree::getNotThinnedPoints()
+{
+	std::vector<Point3d> res;
+
+	if (this == NULL)
+		return res;
+
+	if (median->thinned == false)
+		res.emplace_back(*median);
+
+	std::vector<Point3d> res2 = right->getNotThinnedPoints();
+	res.insert(res.end(), res2.begin(), res2.end());
+
+	res2 = left->getNotThinnedPoints();
+	res.insert(res.end(), res2.begin(), res2.end());
+
+	return res;
 }

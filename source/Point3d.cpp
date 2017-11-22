@@ -81,7 +81,6 @@ bool Point3d::operator == (const Point3d& p2)
 
 
 
-
 //returns the square of a value (unfortunately C++ does not provide this function itself...)
 double sqr(double value)
 {

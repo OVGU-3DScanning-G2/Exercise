@@ -1,5 +1,7 @@
-// OpenGL_Application.cpp : Defines the entry point for the console application.
-//
+/*!
+   \file "OpenGL_Application.cpp"
+   \brief "Defines the entry point for the console application."
+*/
 
 #define USE_GLFW
 
@@ -449,7 +451,8 @@ void loadFileXYZ(const char* filename, std::vector<Point3d>& points)
     size_t numberOfPoints = points.size();
     std::cout << "reading finished: " << numberOfPoints << " points have be read" << std::endl;
 
-#elif _WIN32
+// compile for Windows if not Linux
+#else
 	FILE* file = 0;
 	int error = fopen_s(&file, filename, "rt"); //r= read, t=text
 	if (error != 0)
@@ -484,8 +487,6 @@ void loadFileXYZ(const char* filename, std::vector<Point3d>& points)
 	unsigned int numberOfPoints = points.size();
 
 	std::cout << "reading finished: " << numberOfPoints << " points have be read" << std::endl;
-#else
-	std::cout << "No file loading implemented for this OS." << std::endl;
 #endif
 }
 

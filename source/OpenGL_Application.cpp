@@ -50,11 +50,13 @@ std::vector<Point3d> points;
 std::vector<Point3d> pointsColors;
 std::vector<Point3d> abfrage;
 std::vector<Point3d> abfrageColors;
+std::vector<Point3d> oldPoints;
+std::vector<Point3d> oldPointsColors;
 KDTree data;
 double abfrageLaenge;
 int numNeighborhood = 2;
 int startDim = 0;
-int pointSize = 2;
+int pointSize = 4;
 //-----------------------------------------
 
 int m_windowWidth = 0;
@@ -98,7 +100,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		clock_t begin = clock();
 
 		//loadFileXYZ("data/Stanford Dragon.xyz", points);
-		loadFileXYZ("data/cone.xyz", points);
+		loadFileXYZ("data/Stanford Bunny.xyz", points);
 
 		//Tipp -> #pragma omp parallel for
 
@@ -226,7 +228,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		if (key == GLFW_KEY_S && action == GLFW_RELEASE)
 		{
 			clock_t begin = clock();
-			std::vector<Point3d> oldPoints = points;
+			oldPoints = points;
+			setDefaultPointColors(oldPointsColors, oldPoints.size(), Point3d(255, 255, 255));
 			points = data.smooth(points, numNeighborhood);
 
 			data = KDTree(points, startDim);
@@ -236,12 +239,52 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 			//Einfärben der Differenz zum Vorgängermodel
 			std::vector<double> diffs;
+			double maxValue = 0, minValue = 0;
 
 			for (int i = 0; i < oldPoints.size(); i++)
 			{
-				diffs.emplace_back(pow(oldPoints[i].x - points[i].x, 2)
-					+ pow(oldPoints[i].y - points[i].y, 2)
-					+ pow(oldPoints[i].z - points[i].z, 2));
+				diffs.emplace_back(sqrt(pow(points[i].x - oldPoints[i].x, 2)
+					+ pow(points[i].y - oldPoints[i].y, 2)
+					+ pow(points[i].z - oldPoints[i].z, 2)));
+
+				if (diffs[i] > maxValue || i == 0)
+					maxValue = diffs[i];
+
+				if (diffs[i] < minValue || i == 0)
+					minValue = diffs[i];
+			}
+
+			maxValue = (double)1 / (maxValue - minValue);
+
+			//Normalisieren der Werte
+			for (int i = 0; i < diffs.size(); i++)
+			{
+				diffs[i] = (diffs[i] - minValue) * maxValue;
+			}
+
+			//Übernahme der Werte
+			for (int i = 0; i < oldPoints.size(); i++)
+			{
+				if (diffs[i] > 0.5)
+				{
+					pointsColors[i] = Point3d(255, 0, 0); //rot
+				}
+				else if (diffs[i] > 0.3)
+				{
+					pointsColors[i] = Point3d(255, 165, 0); //orange
+				}
+				else if (diffs[i] > 0.1)
+				{
+					pointsColors[i] = Point3d(255, 255, 0); //gelb
+				}
+				else if (diffs[i] > 0.05)
+				{
+					pointsColors[i] = Point3d(0, 255, 0); //grün
+				}
+				else
+				{
+					pointsColors[i] = Point3d(0, 0, 255); //blau
+				}
 			}
 		}
 
@@ -366,6 +409,11 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 		//draw res-points
 		//----------------------------------------------------------------------------
 		drawPoints(res, resColors, pointSize + 10);
+		//----------------------------------------------------------------------------
+
+		//draw old-points
+		//----------------------------------------------------------------------------
+		drawPoints(oldPoints, oldPointsColors, pointSize);
 		//----------------------------------------------------------------------------
 
 		//draw bounding box for Abfrage

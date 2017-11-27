@@ -9,3 +9,7 @@ moc_*
 CMakeFiles
 cmake_install.cmake
 CMakeCache.txt
+
+# ignore Doxygen-Output
+html
+latex

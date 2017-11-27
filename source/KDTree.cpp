@@ -1,3 +1,8 @@
+/*!
+   \file "KDTree.cpp"
+   \brief "Implementation of KDTree object."
+*/
+
 #include "../include/KDTree.h"
 #include <random>
 static Point3d searchPoint;
@@ -192,13 +197,13 @@ void KDTree::getNN(Point3d& point, std::vector<Point3d*>& neighbours, int k, int
 	{
 		if (point == *median)
 		{
-			return;													  //R�ckgabe von Unendlich beim Ankommen vom
+			return;													  //Rückgabe von Unendlich beim Ankommen vom
 																	  //Blatt des KDTree (Punkt ist angefragter Punkt)
 		}
 		else
 		{
 			insertNeighbour(*median, neighbours, k);
-			return; //R�ckgabe des Punktes, wenn bei Blatt angekommen (nicht der angefragter Punkt)
+			return; //Rückgabe des Punktes, wenn bei Blatt angekommen (nicht der angefragter Punkt)
 		}
 	}
 

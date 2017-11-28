@@ -70,6 +70,28 @@ void initializeGL()
 	glLoadIdentity();
 }
 
+Point3d colorFromGradientHSV(double index)
+{
+	if(index < 0) index = 0;
+	else if(index > 1) index = 1;
+
+	const double H(240.0*(1.0 - index));
+	const double hi(std::floor(H / 60.0));
+	const double f(H / 60 - hi);
+	const double V(1.0);
+	const double S(1.0);
+	const double p(V*(1.0 - S));
+	const double q(V*(1.0 - S*f));
+	const double t(V*(1.0 - S*(1 - f)));
+
+	if(hi == 1) return Point3d((255 * q), (255 * V), (255 * p));
+	else if(hi == 2) return Point3d((255 * p), (255 * V), (255 * t));
+	else if(hi == 3) return Point3d((255 * p), (255 * q), (255 * V));
+	else if(hi == 4) return Point3d((255 * t), (255 * p), (255 * V));
+	else if(hi == 5) return Point3d((255 * V), (255 * p), (255 * q));
+	else return Point3d((255 * V), (255 * t), (255 * p));
+}
+
 void setDefaultPointColors(std::vector<Point3d>& colors, int size, Point3d color)
 {
 	colors.clear();
@@ -100,7 +122,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		clock_t begin = clock();
 
 		//loadFileXYZ("data/Stanford Dragon.xyz", points);
-		loadFileXYZ("data/Stanford Bunny.xyz", points);
+		loadFileXYZ("data/cone.xyz", points);
 
 		//Tipp -> #pragma omp parallel for
 
@@ -265,26 +287,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			//Übernahme der Werte
 			for (int i = 0; i < oldPoints.size(); i++)
 			{
-				if (diffs[i] > 0.5)
-				{
-					pointsColors[i] = Point3d(255, 0, 0); //rot
-				}
-				else if (diffs[i] > 0.3)
-				{
-					pointsColors[i] = Point3d(255, 165, 0); //orange
-				}
-				else if (diffs[i] > 0.1)
-				{
-					pointsColors[i] = Point3d(255, 255, 0); //gelb
-				}
-				else if (diffs[i] > 0.05)
-				{
-					pointsColors[i] = Point3d(0, 255, 0); //grün
-				}
-				else
-				{
-					pointsColors[i] = Point3d(0, 0, 255); //blau
-				}
+				pointsColors[i] = colorFromGradientHSV(diffs[i]);
 			}
 		}
 
@@ -413,7 +416,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
 		//draw old-points
 		//----------------------------------------------------------------------------
-		drawPoints(oldPoints, oldPointsColors, pointSize);
+		//drawPoints(oldPoints, oldPointsColors, pointSize);
 		//----------------------------------------------------------------------------
 
 		//draw bounding box for Abfrage

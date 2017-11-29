@@ -28,6 +28,9 @@
 #pragma comment(lib, "glu32.lib")        //link to some standard OpenGL convenience functions
 #pragma comment(lib, "GLFW/glfw3.lib")   //link against the the GLFW OpenGL SDK
 
+
+std::string filename = "data/cone.xyz";
+
 //using namespace std; //everything what is in the "Standard" C++ namespace, so the "std::" prefix can be avoided
 
 void updateScene(const std::vector<Point3d>& points);
@@ -125,7 +128,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		clock_t begin = clock();
 
 		//loadFileXYZ("data/Stanford Dragon.xyz", points);
-		loadFileXYZ("data/cone.xyz", points);
+		loadFileXYZ(filename.c_str(), points); // FILENAME MOVED TO LINE 32
 
 		//Tipp -> #pragma omp parallel for
 
@@ -368,7 +371,51 @@ void mouse_wheel_event(GLFWwindow* window, double xoffset, double yoffset)
 
 int main(int argc, char* argv[]) //this function is called, wenn ou double-click an ".EXE" file
 {
-	std::cout << "Hello world! \n This is my console window" << std::endl;
+	std::cout 	<< "usage 3ds_01_1 [ -nn <x> <y> <z> | -range <x> <y> <z> ] [-f <filename>]" << std::endl \
+				<< std::endl \
+				<< "	THIS DOESNT DO ANYTHING YET:" << std::endl \
+				<< "	--nn <x> <y> <z>           -   find Nearest Neighbour for <x;y;z>" << std::endl \
+				<< "	--range <r> <x> <y> <z>    -   highlight range <r> around <x;y;z>" << std::endl \
+				<< "	-f <filename>              -   load specific xyz-File" << std::endl\
+				<< "    --pointSizes <small> <big> -   set sizes for drawing points" << std::endl\
+				<< std::endl;
+
+		std::string job = "";
+		double x = 0, y = 0, z = 0, r = 0;
+
+		// parse arguments
+		for(int i = 1; i<argc; i++){
+			if(argv[i][0] == '-'){
+				std::string option = argv[i];
+				if( option == "-f"){
+					i++;
+					filename = argv[i];
+				} else if( option == "--range") {
+					job = "range";
+					i++;
+					r = std::stod(std::string(argv[i]));
+					i++;
+				 	x= std::stod(std::string(argv[i]));
+					i++;
+					y = std::stod(std::string(argv[i]));
+					i++;
+					z = std::stod(std::string(argv[i]));
+				} else if( option == "--nn") {
+					job = "nn";
+					i++;
+					x = std::stod(std::string(argv[i]));
+					i++;
+					y = std::stod(std::string(argv[i]));
+					i++;
+					z = std::stod(std::string(argv[i]));
+				} else if ( option == "--pointSizes" ){
+					i++;
+					pointSize = std::stod(std::string(argv[i]));
+					// i++;
+					// pointSize_big = std::stod(std::string(argv[i]));
+				}
+			}
+	}
 
 	//Create an OpenGL window with GLFW
 	GLFWwindow* window;

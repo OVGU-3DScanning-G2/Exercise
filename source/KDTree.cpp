@@ -1,6 +1,6 @@
 /*!
-   \file "KDTree.cpp"
-   \brief "Implementation of KDTree object."
+   \file KDTree.cpp
+   \brief Implementation of KDTree object.
 */
 
 #include "../include/KDTree.h"

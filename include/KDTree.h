@@ -1,6 +1,6 @@
 /*!
-   \file "KDTree.h"
-   \brief "Description of KDTree object."
+   \file KDTree.h
+   \brief Description of KDTree object.
 */
 
 #include <algorithm>

@@ -1,6 +1,6 @@
 /*!
-   \file "Point3d.cpp"
-   \brief "Implementation 3 dimensional Point Object."
+   \file Point3d.cpp
+   \brief Implementation 3 dimensional Point Object.
 */
 
 #include <cmath>        //for standard C/C++ math functions

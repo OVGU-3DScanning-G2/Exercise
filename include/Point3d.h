@@ -1,6 +1,6 @@
 /*!
-   \file "Point3d.h"
-   \brief "3 dimensional Point Object description."
+   \file Point3d.h
+   \brief 3 dimensional Point Object description.
 */
 
 //the following #-syntax at the begin AND end of this file is an "include guard".

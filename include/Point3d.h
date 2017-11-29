@@ -1,4 +1,9 @@
-//the following #-syntax at the begin AND end of this file is an "include guard". 
+/*!
+   \file "Point3d.h"
+   \brief "3 dimensional Point Object description."
+*/
+
+//the following #-syntax at the begin AND end of this file is an "include guard".
 //It ensures that the compiler include/uses this file only once (if it used multiple times)
 #ifndef MY_POINT_H
 #define MY_POINT_H
@@ -7,30 +12,33 @@
 struct Point3d
 {
   public:
-  Point3d() /// < constructor of this object
+  /// constructor of this object
+  Point3d()
   {
     x = 0; y = 0; z = 0;
   }
-  Point3d(double _x, double _y, double _z) ///< another constructor of this class
+
+  /// another constructor of this class
+  Point3d(double _x, double _y, double _z)
   {
     x = _x; y = _y; z = _z;
   }
 
-  //custom operators that enable vector algebra 
+  //custom operators that enable vector algebra
   //these operator are marked CONST because they don't change member variables of this class
-  Point3d operator + (const Point3d& p2) const; // + operation of two points (pt3 = pt1 + pt2)
-  Point3d operator - (const Point3d& p2) const; // - operation of two points (pt3 = pt1 - pt2)
-  Point3d operator * (double scalar) const;     // multiplication with a scalar value(pt2 = pt1 * 0.5)
+  Point3d operator + (const Point3d& p2) const; ///< '+' operation of two points (pt3 = pt1 + pt2)
+  Point3d operator - (const Point3d& p2) const; ///< '-' operation of two points (pt3 = pt1 - pt2)
+  Point3d operator * (double scalar) const;     ///< multiplication with a scalar value(pt2 = pt1 * 0.5)
 
   //assignments with operator
   //the operators can not be marked CONST because they do change the input
-  Point3d& operator += (const Point3d& p2); // += operation of two points (pt1+= pt2  -> pt1 = pt1 + pt2)
-  Point3d& operator -= (const Point3d& p2); // += operation of two points (pt1-= pt2  -> pt1 = pt1 - pt2)
-  Point3d& operator *= (double scalar);     // *= multiplication with a scalar (pt1*= s  -> pt1 = pt1 * s)
-  bool operator == (const Point3d& p2);
+  Point3d& operator += (const Point3d& p2); ///< += operation of two points (pt1+= pt2  -> pt1 = pt1 + pt2)
+  Point3d& operator -= (const Point3d& p2); ///< += operation of two points (pt1-= pt2  -> pt1 = pt1 - pt2)
+  Point3d& operator *= (double scalar);     ///< *= multiplication with a scalar (pt1*= s  -> pt1 = pt1 * s)
+  bool operator == (const Point3d& p2);     ///< == coparation with other Point3d
 
   double x,y,z;
-  bool thinned = false;
+  bool thinned = false; ///< Variable to prevent reuse of allready thinned points while thinning.
 };
 
 double  sqr(double value);                                  ///< returns the square of a value

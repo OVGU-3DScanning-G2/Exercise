@@ -10,6 +10,10 @@ CMakeFiles
 cmake_install.cmake
 CMakeCache.txt
 
+*.pch
+# ignore temp files of atom-editor
+.atom*
+
 # ignore Doxygen-Output
 html
 latex

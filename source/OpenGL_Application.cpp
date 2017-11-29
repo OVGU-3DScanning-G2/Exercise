@@ -217,6 +217,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 		if (key == GLFW_KEY_UP && action == GLFW_RELEASE)
 		{
+			//! check if Nearest Neighbour was already searched
+			if(abfrage.size()<1){
+				//! if not, select random point
+				abfrage.clear();
+				int random = (std::rand() % (points.size()));
+				abfrage.emplace_back(points[random]);
+			}
+
 			numNeighborhood++;
 
 			ptrRes = data.getKNN(abfrage[0], numNeighborhood);
@@ -233,6 +241,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 		if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
 		{
+
+			//! check if Nearest Neighbour was already searched
+			if(abfrage.size()<1){
+				//! if not, select random point
+				abfrage.clear();
+				int random = (std::rand() % (points.size()));
+				abfrage.emplace_back(points[random]);
+			}
+
 			if (numNeighborhood > 1)
 			{
 				numNeighborhood--;
@@ -262,7 +279,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 			std::cout << "Time needed to smooth: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
 
-			//Einfärben der Differenz zum Vorgängermodel
+			//Einfï¿½rben der Differenz zum Vorgï¿½ngermodel
 			std::vector<double> diffs;
 			double maxValue = 0, minValue = 0;
 
@@ -287,7 +304,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 				diffs[i] = (diffs[i] - minValue) * maxValue;
 			}
 
-			//Übernahme der Werte
+			//ï¿½bernahme der Werte
 			for (int i = 0; i < oldPoints.size(); i++)
 			{
 				pointsColors[i] = colorFromGradientHSV(diffs[i]);

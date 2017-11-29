@@ -29,7 +29,7 @@
 #pragma comment(lib, "GLFW/glfw3.lib")   //link against the the GLFW OpenGL SDK
 
 
-std::string filename = "data/cone.xyz";
+std::string filename = "data/Stanford Bunny.xyz";
 
 //using namespace std; //everything what is in the "Standard" C++ namespace, so the "std::" prefix can be avoided
 
@@ -277,7 +277,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			setDefaultPointColors(oldPointsColors, oldPoints.size(), Point3d(255, 255, 255));
 			points = data.smooth(points, numNeighborhood);
 
-			data = KDTree(points, startDim);
+			//data = KDTree(points, startDim);
 			clock_t end = clock();
 
 			std::cout << "Time needed to smooth: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
@@ -310,7 +310,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			//�bernahme der Werte
 			for (int i = 0; i < oldPoints.size(); i++)
 			{
-				pointsColors[i] = colorFromGradientHSV(diffs[i]);
+				pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0/255);
 			}
 		}
 
@@ -527,14 +527,13 @@ void drawPoints(std::vector<Point3d>& points, std::vector<Point3d>& pointColors,
 	if (!points.empty())
 	{ /* Drawing Points with VertexArrays */
 		glEnableClientState(GL_COLOR_ARRAY);
+		glEnableClientState(GL_VERTEX_ARRAY); //enable data upload to GPU
+		glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &points[0]);
 
 		if (!pointColors.empty())
 			glColorPointer(3, GL_DOUBLE, sizeof(Point3d), &pointColors[0]);
 		else
 			glColor3ub(0, 0, 0);
-
-		glEnableClientState(GL_VERTEX_ARRAY); //enable data upload to GPU
-		glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &points[0]);
 
 		//draw point cloud
 		glDrawArrays(GL_POINTS, 0, (unsigned int)points.size());

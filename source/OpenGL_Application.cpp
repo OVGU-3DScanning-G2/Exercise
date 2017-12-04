@@ -30,7 +30,7 @@
 #pragma comment(lib, "GLFW/glfw3.lib")   //link against the the GLFW OpenGL SDK
 
 
-std::string filename = "data/cone.xyz";
+std::string filename = "data/Stanford Dragon.xyz";
 
 //using namespace std; //everything what is in the "Standard" C++ namespace, so the "std::" prefix can be avoided
 
@@ -59,6 +59,8 @@ std::vector<Point3d> abfrage;
 std::vector<Point3d> abfrageColors;
 std::vector<Point3d> oldPoints;
 std::vector<Point3d> oldPointsColors;
+std::vector<Point3d> cornerPointsLine, cornerPointsPlane;
+bool drawBestFitLine = false, drawBestFitPlane = false;
 KDTree data;
 double abfrageLaenge;
 int numNeighborhood = 2;
@@ -328,6 +330,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			std::cout << points.size() << " points left." << std::endl;
 			std::cout << "Time needed to thinn: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
 		}
+
+		if (key == GLFW_KEY_B && action == GLFW_RELEASE)
+		{
+			computeBestFitLine(points, cornerPointsLine);
+			drawBestFitLine = true;
+
+			computeBestFitPlane(points, cornerPointsPlane);
+			drawBestFitPlane = true;
+		}
 	}
 }
 
@@ -486,6 +497,33 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 		//----------------------------------------------------------------------------
 		//drawPoints(oldPoints, oldPointsColors, pointSize);
 		//----------------------------------------------------------------------------
+
+		glPushAttrib(GL_LINE_BIT);
+		glLineWidth(2);
+		if (drawBestFitLine)
+		{
+			glColor3f(1.0f, 1.0f, 0.0f);
+			glBegin(GL_LINES);
+			glVertex3d(cornerPointsLine[0].x, cornerPointsLine[0].y, cornerPointsLine[0].z);
+			glVertex3d(cornerPointsLine[1].x, cornerPointsLine[1].y, cornerPointsLine[1].z);
+			glEnd();
+		}
+		if (drawBestFitPlane)
+		{
+			glColor3f(0.0f, 1.0f, 0.0f);
+			glBegin(GL_LINE_LOOP);
+			for (size_t i = 0; i < 4; ++i) {
+				glVertex3d(cornerPointsPlane[i].x, cornerPointsPlane[i].y, cornerPointsPlane[i].z);
+			}
+			glEnd();
+			glPointSize(8);
+			glBegin(GL_POINTS);
+			for (size_t i = 0; i < 4; ++i) {
+				glVertex3d(cornerPointsPlane[i].x, cornerPointsPlane[i].y, cornerPointsPlane[i].z);
+			}
+			glEnd();
+		}
+		glPopAttrib();
 
 		//draw bounding box for Abfrage
 		//----------------------------------------------------------------------------

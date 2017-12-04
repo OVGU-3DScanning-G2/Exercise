@@ -13,3 +13,5 @@ S		- Smoothing			- Excercise 3
 T		- Thinning			- Excercise 3
 
 R		- Load/Reload Data	- Nur so
+
+B		- BestFit Line/Plane- Excercise 5

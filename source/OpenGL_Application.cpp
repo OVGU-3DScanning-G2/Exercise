@@ -21,6 +21,7 @@
 #include "../include/GLcamera.h"
 #include "../include/Point3d.h"
 #include "../include/KDTree.h"
+#include "../include/Algorithms.h"
 
 //Normally compiler & linker options are set in the project file and not in the source code
 //Its just here to show what dependencies are needed
@@ -29,7 +30,7 @@
 #pragma comment(lib, "GLFW/glfw3.lib")   //link against the the GLFW OpenGL SDK
 
 
-std::string filename = "data/Stanford Bunny.xyz";
+std::string filename = "data/cone.xyz";
 
 //using namespace std; //everything what is in the "Standard" C++ namespace, so the "std::" prefix can be avoided
 
@@ -310,7 +311,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			//�bernahme der Werte
 			for (int i = 0; i < oldPoints.size(); i++)
 			{
-				pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0/255);
+				pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0 / 255);
 			}
 		}
 

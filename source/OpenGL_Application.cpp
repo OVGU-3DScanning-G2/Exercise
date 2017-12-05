@@ -30,7 +30,7 @@
 #pragma comment(lib, "GLFW/glfw3.lib")   //link against the the GLFW OpenGL SDK
 
 
-std::string filename = "data/Stanford Dragon.xyz";
+std::string filename = "data/cone.xyz";
 
 //using namespace std; //everything what is in the "Standard" C++ namespace, so the "std::" prefix can be avoided
 
@@ -125,12 +125,53 @@ void resizeGL(GLFWwindow* window, int width, int height)
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+	if (key == GLFW_KEY_1 && action == GLFW_RELEASE)
+	{
+		filename = "data/cone.xyz";
+	}
+
+	if (key == GLFW_KEY_2 && action == GLFW_RELEASE)
+	{
+		filename = "data/cap.xyz";
+	}
+
+	if (key == GLFW_KEY_3 && action == GLFW_RELEASE)
+	{
+		filename = "data/Stanford Horse.xyz";
+	}
+
+	if (key == GLFW_KEY_4 && action == GLFW_RELEASE)
+	{
+		filename = "data/Stanford Bunny.xyz";
+	}
+
+	if (key == GLFW_KEY_5 && action == GLFW_RELEASE)
+	{
+		filename = "data/Stanford Skeleton Hand.xyz";
+	}
+
+	if (key == GLFW_KEY_6 && action == GLFW_RELEASE)
+	{
+		filename = "data/Stanford Dragon.xyz";
+	}
+
+	if (key == GLFW_KEY_7 && action == GLFW_RELEASE)
+	{
+		filename = "data/Stanford Happy Buddha.xyz";
+	}
+
 	if (key == GLFW_KEY_R && action == GLFW_RELEASE)
 	{
 		//try to load point cloud data from file
 		clock_t begin = clock();
 
 		//loadFileXYZ("data/Stanford Dragon.xyz", points);
+		points.clear();
+		pointsColors.clear();
+		cornerPointsLine.clear();
+		cornerPointsPlane.clear();
+		drawBestFitLine = false;
+		drawBestFitPlane = false;
 		loadFileXYZ(filename.c_str(), points); // FILENAME MOVED TO LINE 32
 
 		//Tipp -> #pragma omp parallel for

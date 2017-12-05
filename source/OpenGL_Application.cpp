@@ -60,7 +60,7 @@ std::vector<Point3d> abfrageColors;
 std::vector<Point3d> oldPoints;
 std::vector<Point3d> oldPointsColors;
 std::vector<Point3d> cornerPointsLine, cornerPointsPlane;
-bool drawBestFitLine = false, drawBestFitPlane = false;
+bool drawBestFitLine = false, drawBestFitPlane = false, toggleBestFitColoring = true;
 KDTree data;
 double abfrageLaenge;
 int numNeighborhood = 2;
@@ -333,11 +333,88 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 		if (key == GLFW_KEY_B && action == GLFW_RELEASE)
 		{
-			computeBestFitLine(points, cornerPointsLine);
-			drawBestFitLine = true;
+			std::vector<double> diffs;
 
-			computeBestFitPlane(points, cornerPointsPlane);
-			drawBestFitPlane = true;
+			//Einfärben
+			if (toggleBestFitColoring)
+			{
+				computeBestFitLine(points, cornerPointsLine);
+				drawBestFitLine = true;
+				drawBestFitPlane = false;
+
+				Point3d pointOnLine = cornerPointsLine[0];
+				Point3d lineDirection(cornerPointsLine[0].x - cornerPointsLine[1].x,
+					cornerPointsLine[0].y - cornerPointsLine[1].y,
+					cornerPointsLine[0].z - cornerPointsLine[1].z);
+
+				double maxValue = 0, minValue = 0;
+
+				for (int i = 0; i < points.size(); i++)
+				{
+					diffs.emplace_back(distancePt2Line(points[i], pointOnLine, lineDirection));
+
+					if (diffs[i] > maxValue || i == 0)
+						maxValue = diffs[i];
+
+					if (diffs[i] < minValue || i == 0)
+						minValue = diffs[i];
+				}
+
+				maxValue = (double)1 / (maxValue - minValue);
+
+				//Normalisieren der Werte
+				for (int i = 0; i < diffs.size(); i++)
+				{
+					diffs[i] = (diffs[i] - minValue) * maxValue;
+				}
+
+				toggleBestFitColoring = false;
+			}
+			else
+			{
+				computeBestFitPlane(points, cornerPointsPlane);
+				drawBestFitLine = false;
+				drawBestFitPlane = true;
+
+				Point3d pointOnPlane = cornerPointsPlane[0];
+				Point3d direction1(cornerPointsPlane[0].x - cornerPointsPlane[1].x,
+					cornerPointsPlane[0].y - cornerPointsPlane[1].y,
+					cornerPointsPlane[0].z - cornerPointsPlane[1].z);
+				Point3d direction2(cornerPointsPlane[0].x - cornerPointsPlane[2].x,
+					cornerPointsPlane[0].y - cornerPointsPlane[2].y,
+					cornerPointsPlane[0].z - cornerPointsPlane[2].z);
+				Point3d planeDirection(direction1.y * direction2.z - direction2.y * direction1.z,
+					direction1.z * direction2.x - direction2.z * direction1.x,
+					direction1.x * direction2.y - direction2.x * direction1.y);
+
+				double maxValue = 0, minValue = 0;
+
+				for (int i = 0; i < points.size(); i++)
+				{
+					diffs.emplace_back(abs(distancePt2Plane(points[i], pointOnPlane, planeDirection)));
+
+					if (diffs[i] > maxValue || i == 0)
+						maxValue = diffs[i];
+
+					if (diffs[i] < minValue || i == 0)
+						minValue = diffs[i];
+				}
+
+				maxValue = (double)1 / (maxValue - minValue);
+
+				//Normalisieren der Werte
+				for (int i = 0; i < diffs.size(); i++)
+				{
+					diffs[i] = (diffs[i] - minValue) * maxValue;
+				}
+
+				toggleBestFitColoring = true;
+			}
+
+			for (int i = 0; i < points.size(); i++)
+			{
+				pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0 / 255);
+			}
 		}
 	}
 }

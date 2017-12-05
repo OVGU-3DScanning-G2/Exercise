@@ -1,17 +1,17 @@
 # Exercise_1
 
-Space	- getRange			- Excercise 1
+Space	- getRange						- Excercise 1
 
-N		- getKNN			- Excercise 2
+N		- getKNN						- Excercise 2
 
-Up		- numPointsKNN++	- Excercise 2
+Up		- numPointsKNN++				- Excercise 2
 
-Down	- numPointsKNN--	- Excercise 2
+Down	- numPointsKNN--				- Excercise 2
 
-S		- Smoothing			- Excercise 3
+S		- Smoothing						- Excercise 3
 
-T		- Thinning			- Excercise 3
+T		- Thinning						- Excercise 3
 
-R		- Load/Reload Data	- Nur so
+R		- Load/Reload Data				- Nur so
 
-B		- BestFit Line/Plane- Excercise 5
+B		- BestFit Line/Plane (toggle) 	- Excercise 5

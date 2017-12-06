@@ -174,15 +174,6 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		drawBestFitPlane = false;
 		loadFileXYZ(filename.c_str(), points); // FILENAME MOVED TO LINE 32
 
-#ifdef __linux__
-		for (int i = 0; i < points.size(); ++i)
-		{
-			points[i].x = points[i].x * 100;
-			points[i].y = points[i].y * 100;
-			points[i].z = points[i].z * 100;
-		}
-#endif
-
 		//Tipp -> #pragma omp parallel for
 
 		clock_t end = clock();
@@ -397,7 +388,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 					cornerPointsLine[0].y - cornerPointsLine[1].y,
 					cornerPointsLine[0].z - cornerPointsLine[1].z);
 
-				double maxValue = DBL_MAX, minValue = DBL_MIN;
+				double maxValue = DBL_MIN, minValue = DBL_MAX;
 
 				for (int i = 0; i < points.size(); i++)
 				{
@@ -437,7 +428,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 					direction1.z * direction2.x - direction2.z * direction1.x,
 					direction1.x * direction2.y - direction2.x * direction1.y);
 
-				double maxValue = DBL_MAX, minValue = DBL_MIN;
+				double maxValue = DBL_MIN, minValue = DBL_MAX;
 
 				for (int i = 0; i < points.size(); i++)
 				{

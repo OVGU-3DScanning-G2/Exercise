@@ -6,10 +6,14 @@ set(CMAKE_AUTOMOC ON)
 
 
 set(INCLUDE
+    include/SVD.h
+    include/Algorithms.h
     include/KDTree.h
     include/GLcamera.h
     include/Point3d.h)
 set(SOURCE
+    source/SVD.cpp
+    source/Algorithms.cpp
     source/KDTree.cpp
     source/GLcamera.cpp
     source/OpenGL_Application.cpp
@@ -43,5 +47,3 @@ find_package(GLUT REQUIRED)
 
 
 target_link_libraries(${PROJECT_NAME} ${OPENGL_LIBRARIES} ${GLUT_LIBRARY}  glfw)
-
-

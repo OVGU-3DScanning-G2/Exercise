@@ -60,7 +60,7 @@ std::vector<Point3d> abfrageColors;
 std::vector<Point3d> oldPoints;
 std::vector<Point3d> oldPointsColors;
 std::vector<Point3d> cornerPointsLine, cornerPointsPlane;
-bool drawBestFitLine = false, drawBestFitPlane = false, toggleBestFitColoring = true;
+bool drawBestFitLine = false, drawBestFitPlane = false, doComputeBestFitLine = true;
 KDTree data;
 double abfrageLaenge;
 int numNeighborhood = 2;
@@ -377,7 +377,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 			std::vector<double> diffs;
 
 			//Einfärben
-			if (toggleBestFitColoring)
+			if (doComputeBestFitLine)
 			{
 				computeBestFitLine(points, cornerPointsLine);
 				drawBestFitLine = true;
@@ -409,7 +409,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 					diffs[i] = (diffs[i] - minValue) * maxValue;
 				}
 
-				toggleBestFitColoring = false;
+				doComputeBestFitLine = false;
 			}
 			else
 			{
@@ -449,7 +449,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 					diffs[i] = (diffs[i] - minValue) * maxValue;
 				}
 
-				toggleBestFitColoring = true;
+				doComputeBestFitLine = true;
 			}
 
 			for (int i = 0; i < points.size(); i++)

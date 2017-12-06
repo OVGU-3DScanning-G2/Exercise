@@ -174,12 +174,14 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		drawBestFitPlane = false;
 		loadFileXYZ(filename.c_str(), points); // FILENAME MOVED TO LINE 32
 
+#ifdef __linux__
 		for (int i = 0; i < points.size(); ++i)
 		{
 			points[i].x = points[i].x * 100;
 			points[i].y = points[i].y * 100;
 			points[i].z = points[i].z * 100;
 		}
+#endif
 
 		//Tipp -> #pragma omp parallel for
 
@@ -395,7 +397,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 					cornerPointsLine[0].y - cornerPointsLine[1].y,
 					cornerPointsLine[0].z - cornerPointsLine[1].z);
 
-				double maxValue = 0, minValue = 0;
+				double maxValue = DBL_MAX, minValue = DBL_MIN;
 
 				for (int i = 0; i < points.size(); i++)
 				{
@@ -458,6 +460,28 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 				doComputeBestFitLine = true;
 			}
+
+			double meanDiffs = 0, varianceDiffs = 0, standardDeviationDiffs = 0;
+
+			for (int i = 0; i < diffs.size(); i++)
+			{
+				meanDiffs += diffs[i];
+			}
+
+			meanDiffs /= diffs.size();
+
+			for (int i = 0; i < diffs.size(); i++)
+			{
+				varianceDiffs += pow(diffs[i] - meanDiffs, 2);
+			}
+
+			varianceDiffs /= diffs.size();
+
+			standardDeviationDiffs = sqrt(varianceDiffs);
+
+			std::cout << "Mittelwert: " << meanDiffs << std::endl;
+			std::cout << "Varianz: " << varianceDiffs << std::endl;
+			std::cout << "Standardabweichung: " << standardDeviationDiffs << std::endl;
 
 			for (int i = 0; i < points.size(); i++)
 			{

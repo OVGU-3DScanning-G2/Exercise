@@ -174,6 +174,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		drawBestFitPlane = false;
 		loadFileXYZ(filename.c_str(), points); // FILENAME MOVED TO LINE 32
 
+		for (int i = 0; i < points.size(); ++i)
+		{
+			points[i].x = points[i].x * 100;
+			points[i].y = points[i].y * 100;
+			points[i].z = points[i].z * 100;
+		}
+
 		//Tipp -> #pragma omp parallel for
 
 		clock_t end = clock();

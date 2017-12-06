@@ -79,15 +79,20 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="source\Algorithms.cpp" />
     <ClCompile Include="source\GLcamera.cpp" />
     <ClCompile Include="source\KDTree.cpp" />
     <ClCompile Include="source\OpenGL_Application.cpp" />
     <ClCompile Include="source\Point3d.cpp" />
+    <ClCompile Include="source\SVD.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\Algorithms.h" />
     <ClInclude Include="include\GLcamera.h" />
     <ClInclude Include="include\KDTree.h" />
+    <ClInclude Include="include\Matrix.h" />
     <ClInclude Include="include\Point3d.h" />
+    <ClInclude Include="include\SVD.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

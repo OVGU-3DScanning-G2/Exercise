@@ -437,7 +437,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 					direction1.z * direction2.x - direction2.z * direction1.x,
 					direction1.x * direction2.y - direction2.x * direction1.y);
 
-				double maxValue = 0, minValue = 0;
+				double maxValue = DBL_MAX, minValue = DBL_MIN;
 
 				for (int i = 0; i < points.size(); i++)
 				{

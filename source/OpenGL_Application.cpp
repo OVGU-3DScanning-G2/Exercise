@@ -181,20 +181,19 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
          */
         // points.clear();
         // pointsColors.clear();
-        drawBestFitSphere = true;
 
         // sum x
-//        std::vector<Point3d>
-//        points
-clock_t begin = clock();
+		//        std::vector<Point3d>
+		//        points
+		clock_t begin = clock();
 
-        double sum_x, sum_y, sum_z,
-                sum_xx, sum_xy, sum_xz,
-                    sum_yy, sum_yz,
-                    sum_zz,
-                sum_xxx, sum_xxy, sum_xxz, sum_xyy, sum_xyz, sum_xzz,
-                    sum_yyy, sum_yyz, sum_yzz,
-                    sum_zzz;
+        double sum_x = 0, sum_y = 0, sum_z = 0,
+                sum_xx = 0, sum_xy = 0, sum_xz = 0,
+                    sum_yy = 0, sum_yz = 0,
+                    sum_zz = 0,
+                sum_xxx = 0, sum_xxy = 0, sum_xxz = 0, sum_xyy = 0, sum_xyz = 0, sum_xzz = 0,
+                    sum_yyy = 0, sum_yyz = 0, sum_yzz = 0,
+                    sum_zzz = 0;
 
 		#pragma omp parallel for reduction(+: sum_x, sum_y, sum_z,sum_xx, sum_xy, sum_xz,sum_yy, sum_yz,sum_zz,sum_xxx, sum_xxy, sum_xxz, sum_xyy, sum_xyz, sum_xzz,sum_yyy, sum_yyz, sum_yzz, sum_zzz)
         for(int i = 0; i < points.size(); ++i)
@@ -263,6 +262,61 @@ clock_t begin = clock();
 
 		clock_t end = clock();
 		std::cout << "Time needed to calculate Best Fit Sphere: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+
+		std::vector<double> diffs;
+
+		double maxValue = DBL_MIN, minValue = DBL_MAX;
+
+		for (int i = 0; i < points.size(); i++)
+		{
+			diffs.emplace_back(abs(distance3d(bestFitSphereCenter, points[i]) - bestFitSphereRadius));
+
+			if (diffs[i] > maxValue || i == 0)
+				maxValue = diffs[i];
+
+			if (diffs[i] < minValue || i == 0)
+				minValue = diffs[i];
+		}
+
+		maxValue = (double)1 / (maxValue - minValue);
+
+		//Normalisieren der Werte
+		for (int i = 0; i < diffs.size(); i++)
+		{
+			diffs[i] = (diffs[i] - minValue) * maxValue;
+		}
+
+		//Stadnardabweichung/Mittelwert/Varianz
+		double meanDiffs = 0, varianceDiffs = 0, standardDeviationDiffs = 0;
+
+		for (int i = 0; i < diffs.size(); i++)
+		{
+			meanDiffs += diffs[i];
+		}
+
+		meanDiffs /= diffs.size();
+
+		for (int i = 0; i < diffs.size(); i++)
+		{
+			varianceDiffs += pow(diffs[i] - meanDiffs, 2);
+		}
+
+		varianceDiffs /= diffs.size();
+
+		standardDeviationDiffs = sqrt(varianceDiffs);
+
+		std::cout << "Mittelwert: " << meanDiffs << std::endl;
+		std::cout << "Varianz: " << varianceDiffs << std::endl;
+		std::cout << "Standardabweichung: " << standardDeviationDiffs << std::endl;
+		std::cout << "Radius: " << bestFitSphereRadius << std::endl;
+		std::cout << "Center: " << bestFitSphereCenter.x << ", " << bestFitSphereCenter.y << ", " << bestFitSphereCenter.z << std::endl;
+
+		for (int i = 0; i < points.size(); i++)
+		{
+			pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0 / 255);
+		}
+
+		drawBestFitSphere = true;
     }
 	if (key == GLFW_KEY_R && action == GLFW_RELEASE)
 	{

@@ -164,10 +164,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	if (key == GLFW_KEY_8 && action == GLFW_RELEASE)
 	{
-		filename = "data/sphere2.xyz";
+		filename = "data/sphere.xyz";
 	}
 
-	if (key == GLFW_KEY_8 && action == GLFW_RELEASE)
+	if (key == GLFW_KEY_9 && action == GLFW_RELEASE)
 	{
 		filename = "data/sphere2.xyz";
 	}

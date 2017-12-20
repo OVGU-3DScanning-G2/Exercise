@@ -186,6 +186,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         // sum x
 //        std::vector<Point3d>
 //        points
+clock_t begin = clock();
+
         double sum_x, sum_y, sum_z,
                 sum_xx, sum_xy, sum_xz,
                     sum_yy, sum_yz,
@@ -193,13 +195,15 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 sum_xxx, sum_xxy, sum_xxz, sum_xyy, sum_xyz, sum_xzz,
                     sum_yyy, sum_yyz, sum_yzz,
                     sum_zzz;
-        for(Point3d point : points)
+
+		#pragma omp parallel for reduction(+: sum_x, sum_y, sum_z,sum_xx, sum_xy, sum_xz,sum_yy, sum_yz,sum_zz,sum_xxx, sum_xxy, sum_xxz, sum_xyy, sum_xyz, sum_xzz,sum_yyy, sum_yyz, sum_yzz, sum_zzz)
+        for(int i = 0; i < points.size(); ++i)
         {
-            double X  = point.x;
+            double X  = points[i].x;
             double XX = X*X;
-            double Y  = point.y;
+            double Y  = points[i].y;
             double YY = Y*Y;
-            double Z  = point.z;
+            double Z  = points[i].z;
             double ZZ = Z*Z;
 
             sum_x += X;
@@ -257,6 +261,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                              center_y*sum_y+
                              center_z*sum_z))/n);
 
+		clock_t end = clock();
+		std::cout << "Time needed to calculate Best Fit Sphere: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
     }
 	if (key == GLFW_KEY_R && action == GLFW_RELEASE)
 	{

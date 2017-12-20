@@ -3,7 +3,12 @@ cmake_minimum_required(VERSION 2.8)
 
 set(CMAKE_AUTOMOC ON)
 
-
+# inlude OpenMP if installed:
+find_package(OpenMP)
+if (OPENMP_FOUND)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+endif()
 
 set(INCLUDE
     include/SVD.h
@@ -11,6 +16,7 @@ set(INCLUDE
     include/KDTree.h
     include/GLcamera.h
     include/Point3d.h)
+
 set(SOURCE
     source/SVD.cpp
     source/Algorithms.cpp
@@ -18,6 +24,7 @@ set(SOURCE
     source/GLcamera.cpp
     source/OpenGL_Application.cpp
     source/Point3d.cpp)
+
 aux_source_directory(GLFW EXTERN)
 set (CMAKE_CXX_STANDARD 11)
 add_executable(${PROJECT_NAME}

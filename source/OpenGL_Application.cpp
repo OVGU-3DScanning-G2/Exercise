@@ -61,6 +61,8 @@ std::vector<Point3d> oldPoints;
 std::vector<Point3d> oldPointsColors;
 std::vector<Point3d> cornerPointsLine, cornerPointsPlane;
 bool drawBestFitLine = false, drawBestFitPlane = false, doComputeBestFitLine = true,drawBestFitSphere=false;
+double bestFitSphereRadius = 0;
+Point3d bestFitSphereCenter;
 KDTree data;
 double abfrageLaenge;
 int numNeighborhood = 2;
@@ -160,6 +162,16 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		filename = "data/Stanford Happy Buddha.xyz";
 	}
 
+	if (key == GLFW_KEY_8 && action == GLFW_RELEASE)
+	{
+		filename = "data/sphere2.xyz";
+	}
+
+	if (key == GLFW_KEY_8 && action == GLFW_RELEASE)
+	{
+		filename = "data/sphere2.xyz";
+	}
+
     if (key == GLFW_KEY_F && action == GLFW_RELEASE)
     {
         /*
@@ -167,8 +179,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
          * Insert Spherefitting
          *
          */
-        points.clear();
-        pointsColors.clear();
+        // points.clear();
+        // pointsColors.clear();
         drawBestFitSphere = true;
 
         // sum x
@@ -236,7 +248,9 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         double center_y = (a*(h*l-m*g) -e*(d*l-m*c) +j*(d*g-h*c))/delta;
         double center_z = (a*(f*m-h*k) -e*(b*m-d*k) +j*(b*h-d*f))/delta;
 
-        double radius = sqrt(pow(center_x,2)+
+		bestFitSphereCenter = Point3d(center_x, center_y, center_z);
+
+        bestFitSphereRadius = sqrt(pow(center_x,2)+
                       pow(center_y,2)+
                       pow(center_z,2)+
                       (A1-2*(center_x*sum_x+
@@ -750,7 +764,15 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 		}
         if (drawBestFitSphere)
         {
-            /// TODO: draw sphere
+			//draw center point as a sphere
+			glPushMatrix();
+			glEnable (GL_BLEND); glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			glColor4f(0, 0.4, 0, 0.7);
+			glTranslated(bestFitSphereCenter.x, bestFitSphereCenter.y, bestFitSphereCenter.z);
+			GLUquadric* quad = gluNewQuadric();
+			gluSphere(quad, bestFitSphereRadius, 30, 30);
+			gluDeleteQuadric(quad);
+			glPopMatrix();
         }
 		glPopAttrib();
 

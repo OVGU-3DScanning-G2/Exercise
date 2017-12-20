@@ -5,7 +5,7 @@
 #include <vector>
 #include "Matrix.h"
 #include <cmath>
-
+#include <cstddef>
 /** @brief In this namespace the singular value decomposition is implemented.
 */
 namespace SVD

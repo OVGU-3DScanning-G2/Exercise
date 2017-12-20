@@ -60,7 +60,7 @@ std::vector<Point3d> abfrageColors;
 std::vector<Point3d> oldPoints;
 std::vector<Point3d> oldPointsColors;
 std::vector<Point3d> cornerPointsLine, cornerPointsPlane;
-bool drawBestFitLine = false, drawBestFitPlane = false, doComputeBestFitLine = true;
+bool drawBestFitLine = false, drawBestFitPlane = false, doComputeBestFitLine = true,drawBestFitSphere=false;
 KDTree data;
 double abfrageLaenge;
 int numNeighborhood = 2;
@@ -160,6 +160,90 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		filename = "data/Stanford Happy Buddha.xyz";
 	}
 
+    if (key == GLFW_KEY_F && action == GLFW_RELEASE)
+    {
+        /*
+         *
+         * Insert Spherefitting
+         *
+         */
+        points.clear();
+        pointsColors.clear();
+        drawBestFitSphere = true;
+
+        // sum x
+//        std::vector<Point3d>
+//        points
+        double sum_x, sum_y, sum_z,
+                sum_xx, sum_xy, sum_xz,
+                    sum_yy, sum_yz,
+                    sum_zz,
+                sum_xxx, sum_xxy, sum_xxz, sum_xyy, sum_xyz, sum_xzz,
+                    sum_yyy, sum_yyz, sum_yzz,
+                    sum_zzz;
+        for(Point3d point : points)
+        {
+            double X  = point.x;
+            double XX = X*X;
+            double Y  = point.y;
+            double YY = Y*Y;
+            double Z  = point.z;
+            double ZZ = Z*Z;
+
+            sum_x += X;
+            sum_xx += XX;
+            sum_xxx += XX*X;
+            sum_y += Y;
+            sum_yy += YY;
+            sum_yyy += YY*Y;
+            sum_z += Z;
+            sum_zz += ZZ;
+            sum_zzz += ZZ*Z;
+
+            sum_xy += X*Y;
+            sum_yz += Y*Z;
+            sum_xz += X*Z;
+
+            sum_xxy += XX*Y;
+            sum_xxz += XX*Z;
+            sum_xyy += YY*X;
+            sum_yyz += YY*Z;
+            sum_xzz += ZZ*X;
+            sum_yzz += ZZ*Y;
+        }
+        double A1 = sum_xx + sum_yy + sum_zz;
+
+        int n = points.size();
+
+        double a = 2 * (sum_x * sum_x - n * sum_xx);
+        double b = 2 * (sum_x * sum_y - n * sum_xy);
+        double c = 2 * (sum_x * sum_z - n * sum_xz);
+        double d = - n * (sum_xxx + sum_xyy + sum_xzz) + A1 * sum_x;
+
+        double e = 2 * (sum_x * sum_y - n * sum_xy);
+        double f = 2 * (sum_y * sum_y - n * sum_yy);
+        double g = 2 * (sum_y * sum_z - n * sum_yz);
+        double h = - n * (sum_xxy + sum_yyy + sum_yzz) + A1 * sum_y;
+
+        double j = 2 * (sum_x * sum_z - n * sum_xz);
+        double k = 2 * (sum_y * sum_z - n * sum_yz);
+        double l = 2 * (sum_z * sum_z - n * sum_zz);
+        double m = - n * (sum_xxz + sum_yyz + sum_zzz) + A1 * sum_z;
+
+        double delta = a*(f*l - g*k)-e*(b*l-c*k) + j*(b*g-c*f);
+
+        double center_x = (d*(f*l-g*k) -h*(b*l-c*k) +m*(b*g-c*f))/delta;
+        double center_y = (a*(h*l-m*g) -e*(d*l-m*c) +j*(d*g-h*c))/delta;
+        double center_z = (a*(f*m-h*k) -e*(b*m-d*k) +j*(b*h-d*f))/delta;
+
+        double radius = sqrt(pow(center_x,2)+
+                      pow(center_y,2)+
+                      pow(center_z,2)+
+                      (A1-2*(center_x*sum_x+
+                             center_y*sum_y+
+                             center_z*sum_z))/n);
+
+    }
 	if (key == GLFW_KEY_R && action == GLFW_RELEASE)
 	{
 		//try to load point cloud data from file
@@ -172,6 +256,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		cornerPointsPlane.clear();
 		drawBestFitLine = false;
 		drawBestFitPlane = false;
+        drawBestFitSphere = false;
 		loadFileXYZ(filename.c_str(), points); // FILENAME MOVED TO LINE 32
 
 		//Tipp -> #pragma omp parallel for
@@ -209,7 +294,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	if (!points.empty())
 	{
-		if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
+        if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
 		{
 			//KDTree - RangeAbfrage
 			//----------------------------------------------------------------------------
@@ -663,6 +748,10 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 			}
 			glEnd();
 		}
+        if (drawBestFitSphere)
+        {
+            /// TODO: draw sphere
+        }
 		glPopAttrib();
 
 		//draw bounding box for Abfrage

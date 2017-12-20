@@ -2,6 +2,7 @@
 #define MY_MATRIX_H
 
 #include <vector>
+#include <stdlib.h>
 
 /** @brief class that implements a MxN matrix.
     @details the ordering is row-first

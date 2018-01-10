@@ -30,7 +30,7 @@
 #pragma comment(lib, "GLFW/glfw3.lib")   //link against the the GLFW OpenGL SDK
 
 
-std::string filename = "data/cone.xyz";
+std::string filename = "../data/cone.xyz";
 
 //using namespace std; //everything what is in the "Standard" C++ namespace, so the "std::" prefix can be avoided
 
@@ -125,8 +125,509 @@ void resizeGL(GLFWwindow* window, int width, int height)
 	m_camera.updateProjection(); //adjust projection to new window size
 }
 
+void action_loadFile(GLFWwindow* window) {
+		//try to load point cloud data from file
+		clock_t begin = clock();
+
+		//loadFileXYZ("data/Stanford Dragon.xyz", points);
+		points.clear();
+		pointsColors.clear();
+		cornerPointsLine.clear();
+		cornerPointsPlane.clear();
+		drawBestFitLine = false;
+		drawBestFitPlane = false;
+        drawBestFitSphere = false;
+		loadFileXYZ(filename.c_str(), points); // FILENAME MOVED TO LINE 32
+
+		//Tipp -> #pragma omp parallel for
+
+		clock_t end = clock();
+		std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+
+		//OK, we now compute the min and max coordinates for our bounding box
+		updateScene(points);
+
+		//Load KD-Tree
+		//----------------------------------------------------------------------------
+		begin = clock();
+
+		data = KDTree(points, startDim);
+
+		end = clock();
+		std::cout << "Time needed to build kdTree: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+		//----------------------------------------------------------------------------
+
+		/* Make the window's context current */
+		glfwMakeContextCurrent(window);
+
+		//Prepare our virtual camera
+		glfwGetFramebufferSize(window, &m_windowWidth, &m_windowHeight);
+
+		//Initialize Camera
+		m_camera.setWindowSize(m_windowWidth, m_windowHeight);    //setup window parameters
+		m_camera.initializeCamera(m_sceneCenter, m_sceneRadius);  //set the camera outside the scene
+		m_camera.updateProjection();                              //adjust projection to window size
+
+																  //Farben der Punkte festlegen
+		setDefaultPointColors(pointsColors, points.size(), Point3d(0, 255, 0));
+}
+
+void action_bestFitSphere(){
+	/*
+	*
+	* Insert Spherefitting
+	*
+	*/
+	// points.clear();
+	// pointsColors.clear();
+
+	// sum x
+	//        std::vector<Point3d>
+	//        points
+	if (points.empty())
+	{
+		std::cout << "ERROR: cant execute bestFitSphere because points empty." <<  std::endl; 
+	} else {
+		/*
+		 *
+		 * Insert Spherefitting
+		 *
+		 */
+		// points.clear();
+		// pointsColors.clear();
+		// sum x
+		//        std::vector<Point3d>
+		//        points
+		clock_t begin = clock();
+		double sum_x = 0, sum_y = 0, sum_z = 0, sum_xx = 0, sum_xy = 0, sum_xz = 0,
+				sum_yy = 0, sum_yz = 0, sum_zz = 0, sum_xxx = 0, sum_xxy = 0,
+				sum_xxz = 0, sum_xyy = 0, sum_xyz = 0, sum_xzz = 0, sum_yyy = 0,
+				sum_yyz = 0, sum_yzz = 0, sum_zzz = 0;
+		#pragma omp parallel for reduction(+: sum_x, sum_y, sum_z,sum_xx, sum_xy, sum_xz,sum_yy, sum_yz,sum_zz,sum_xxx, sum_xxy, sum_xxz, sum_xyy, sum_xyz, sum_xzz,sum_yyy, sum_yyz, sum_yzz, sum_zzz)
+		for (int i = 0; i < points.size(); ++i) {
+			double X = points[i].x;
+			double XX = X * X;
+			double Y = points[i].y;
+			double YY = Y * Y;
+			double Z = points[i].z;
+			double ZZ = Z * Z;
+			sum_x += X;
+			sum_xx += XX;
+			sum_xxx += XX * X;
+			sum_y += Y;
+			sum_yy += YY;
+			sum_yyy += YY * Y;
+			sum_z += Z;
+			sum_zz += ZZ;
+			sum_zzz += ZZ * Z;
+			sum_xy += X * Y;
+			sum_yz += Y * Z;
+			sum_xz += X * Z;
+			sum_xxy += XX * Y;
+			sum_xxz += XX * Z;
+			sum_xyy += YY * X;
+			sum_yyz += YY * Z;
+			sum_xzz += ZZ * X;
+			sum_yzz += ZZ * Y;
+		}
+		double A1 = sum_xx + sum_yy + sum_zz;
+		int n = points.size();
+		double a = 2 * (sum_x * sum_x - n * sum_xx);
+		double b = 2 * (sum_x * sum_y - n * sum_xy);
+		double c = 2 * (sum_x * sum_z - n * sum_xz);
+		double d = -n * (sum_xxx + sum_xyy + sum_xzz) + A1 * sum_x;
+		double e = 2 * (sum_x * sum_y - n * sum_xy);
+		double f = 2 * (sum_y * sum_y - n * sum_yy);
+		double g = 2 * (sum_y * sum_z - n * sum_yz);
+		double h = -n * (sum_xxy + sum_yyy + sum_yzz) + A1 * sum_y;
+		double j = 2 * (sum_x * sum_z - n * sum_xz);
+		double k = 2 * (sum_y * sum_z - n * sum_yz);
+		double l = 2 * (sum_z * sum_z - n * sum_zz);
+		double m = -n * (sum_xxz + sum_yyz + sum_zzz) + A1 * sum_z;
+		double delta = a * (f * l - g * k) - e * (b * l - c * k)
+				+ j * (b * g - c * f);
+		double center_x = (d * (f * l - g * k) - h * (b * l - c * k)
+				+ m * (b * g - c * f)) / delta;
+		double center_y = (a * (h * l - m * g) - e * (d * l - m * c)
+				+ j * (d * g - h * c)) / delta;
+		double center_z = (a * (f * m - h * k) - e * (b * m - d * k)
+				+ j * (b * h - d * f)) / delta;
+		bestFitSphereCenter = Point3d(center_x, center_y, center_z);
+		bestFitSphereRadius = sqrt(
+				pow(center_x, 2) + pow(center_y, 2) + pow(center_z, 2)
+						+ (A1
+								- 2
+										* (center_x * sum_x + center_y * sum_y
+												+ center_z * sum_z)) / n);
+		clock_t end = clock();
+		std::cout << "Time needed to calculate Best Fit Sphere: "
+				<< double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+		std::vector<double> diffs;
+		double maxValue = DBL_MIN, minValue = DBL_MAX;
+		for (int i = 0; i < points.size(); i++) {
+			diffs.emplace_back(
+					abs(
+							distance3d(bestFitSphereCenter, points[i])
+									- bestFitSphereRadius));
+			if (diffs[i] > maxValue || i == 0)
+				maxValue = diffs[i];
+
+			if (diffs[i] < minValue || i == 0)
+				minValue = diffs[i];
+		}
+		maxValue = (double) (1) / (maxValue - minValue);
+		//Normalisieren der Werte
+		for (int i = 0; i < diffs.size(); i++) {
+			diffs[i] = (diffs[i] - minValue) * maxValue;
+		}
+		//Stadnardabweichung/Mittelwert/Varianz
+		double meanDiffs = 0, varianceDiffs = 0, standardDeviationDiffs = 0;
+		for (int i = 0; i < diffs.size(); i++) {
+			meanDiffs += diffs[i];
+		}
+		meanDiffs /= diffs.size();
+		for (int i = 0; i < diffs.size(); i++) {
+			varianceDiffs += pow(diffs[i] - meanDiffs, 2);
+		}
+		varianceDiffs /= diffs.size();
+		standardDeviationDiffs = sqrt(varianceDiffs);
+		std::cout << "Mittelwert: " << meanDiffs << std::endl;
+		std::cout << "Varianz: " << varianceDiffs << std::endl;
+		std::cout << "Standardabweichung: " << standardDeviationDiffs << std::endl;
+		std::cout << "Radius: " << bestFitSphereRadius << std::endl;
+		std::cout << "Center: " << bestFitSphereCenter.x << ", "
+				<< bestFitSphereCenter.y << ", " << bestFitSphereCenter.z
+				<< std::endl;
+		for (int i = 0; i < points.size(); i++) {
+			pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0 / 255);
+		}
+		drawBestFitSphere = true;
+	}
+}
+
+void action_rangeRequest() {
+		//KDTree - RangeAbfrage
+	if (points.empty())
+	{
+		std::cout << "ERROR: cant execute RangeReuest because points empty." <<  std::endl; 
+	} else {
+		//----------------------------------------------------------------------------
+		abfrage.clear();
+		int random = (std::rand() % (points.size()));
+		abfrage.emplace_back(points[random]);
+
+		Point3d S = m_bbmax - m_bbmin;
+		abfrageLaenge = S.x * 0.25;
+
+		clock_t begin = clock();
+		ptrRes = data.getRange(abfrageLaenge, abfrage[0], startDim);
+
+		res.clear();
+		for(Point3d* point : ptrRes)
+		{
+			res.emplace_back(*point);
+		}
+
+		clock_t end = clock();
+
+		setDefaultPointColors(resColors, res.size(), Point3d(255, 0, 0));
+		setDefaultPointColors(abfrageColors, abfrage.size(), Point3d(125, 125, 0));
+
+		std::cout << "Time needed to calculate range query: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+		//----------------------------------------------------------------------------
+ }
+}
+
+void action_nearestNeighbor() {
+	if (points.empty())
+	{
+		std::cout << "ERROR: cant execute NearestNeighbor because points empty." <<  std::endl; 
+	} else {
+		abfrage.clear();
+		int random = (std::rand() % (points.size()));
+		abfrage.emplace_back(points[random]);
+
+		res.clear();
+
+		clock_t begin = clock();
+		ptrRes = data.getKNN(abfrage[0], numNeighborhood);
+
+		res.clear();
+		for(Point3d* point : ptrRes)
+		{
+			res.emplace_back(*point);
+		}
+		clock_t end = clock();
+
+		setDefaultPointColors(resColors, res.size(), Point3d(255, 0, 0));
+		setDefaultPointColors(abfrageColors, abfrage.size(), Point3d(125, 125, 0));
+
+		std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+	}
+}
+
+void action_incNeighborhood() {
+	//! check if Nearest Neighbour was already searched
+	if (points.empty()){
+		std::cout << "ERROR: cant execute incNeighborhood because points empty." <<  std::endl; 
+	} else {
+		if(abfrage.size()<1){
+			//! if not, select random point
+			abfrage.clear();
+			int random = (std::rand() % (points.size()));
+			abfrage.emplace_back(points[random]);
+		}
+
+		numNeighborhood++;
+
+		ptrRes = data.getKNN(abfrage[0], numNeighborhood);
+
+		res.clear();
+		for(Point3d* point : ptrRes)
+		{
+			res.emplace_back(*point);
+		}
+
+		setDefaultPointColors(resColors, res.size(), Point3d(255, 0, 0));
+		setDefaultPointColors(abfrageColors, abfrage.size(), Point3d(125, 125, 0));
+	}
+}
+
+void action_decNeighborhood() {
+	//! check if Nearest Neighbour was already searched
+	if (points.empty()){
+		std::cout << "ERROR: cant execute decNeighborhood because points empty." <<  std::endl; 
+	} else {
+		if(abfrage.size()<1){
+			//! if not, select random point
+			abfrage.clear();
+			int random = (std::rand() % (points.size()));
+			abfrage.emplace_back(points[random]);
+		}
+
+		if (numNeighborhood > 1)
+		{
+			numNeighborhood--;
+		}
+		ptrRes = data.getKNN(abfrage[0], numNeighborhood);
+
+		res.clear();
+		for(Point3d* point : ptrRes)
+		{
+			res.emplace_back(*point);
+		}
+
+		setDefaultPointColors(resColors, res.size(), Point3d(255, 0, 0));
+		setDefaultPointColors(abfrageColors, abfrage.size(), Point3d(125, 125, 0));
+	}
+}
+
+void action_smooth() {
+	if (points.empty()){
+		std::cout << "ERROR: cant execute smooth because points empty." <<  std::endl; 
+	} else {
+		clock_t begin = clock();
+		oldPoints = points;
+		setDefaultPointColors(oldPointsColors, oldPoints.size(), Point3d(255, 255, 255));
+		points = data.smooth(points, numNeighborhood);
+
+		//data = KDTree(points, startDim);
+		clock_t end = clock();
+
+		std::cout << "Time needed to smooth: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+
+		//Einfärben der Differenz zum Vorg�ngermodel
+		std::vector<double> diffs;
+		double maxValue = 0, minValue = 0;
+
+		for (int i = 0; i < oldPoints.size(); i++)
+		{
+			diffs.emplace_back(sqrt(pow(points[i].x - oldPoints[i].x, 2)
+				+ pow(points[i].y - oldPoints[i].y, 2)
+				+ pow(points[i].z - oldPoints[i].z, 2)));
+
+			if (diffs[i] > maxValue || i == 0)
+				maxValue = diffs[i];
+
+			if (diffs[i] < minValue || i == 0)
+				minValue = diffs[i];
+		}
+
+		maxValue = (double)1 / (maxValue - minValue);
+
+		//Normalisieren der Werte
+		for (int i = 0; i < diffs.size(); i++)
+		{
+			diffs[i] = (diffs[i] - minValue) * maxValue;
+		}
+
+		//Übernahme der Werte
+		for (int i = 0; i < oldPoints.size(); i++)
+		{
+			pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0 / 255);
+		}
+	}
+}
+
+void action_thinning(){
+	if (points.empty()){
+		std::cout << "ERROR: cant execute thinning because points empty." <<  std::endl; 
+	} else {
+		clock_t begin = clock();
+
+		data.thinning(numNeighborhood);
+		points = data.getNotThinnedPoints();
+		clock_t end = clock();
+
+		data = KDTree(points, startDim);
+
+		std::cout << points.size() << " points left." << std::endl;
+		std::cout << "Time needed to thinn: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+	}
+}
+
+void action_bestFitLine(){
+	if (points.empty()){
+		std::cout << "ERROR: cant execute bestFitLine because points empty." <<  std::endl; 
+	} else {
+		std::vector<double> diffs;
+		
+		computeBestFitLine(points, cornerPointsLine);
+		drawBestFitLine = true;
+		drawBestFitPlane = false;
+
+		Point3d pointOnLine = cornerPointsLine[0];
+		Point3d lineDirection(cornerPointsLine[0].x - cornerPointsLine[1].x,
+			cornerPointsLine[0].y - cornerPointsLine[1].y,
+			cornerPointsLine[0].z - cornerPointsLine[1].z);
+
+		double maxValue = DBL_MIN, minValue = DBL_MAX;
+
+		for (int i = 0; i < points.size(); i++)
+		{
+			diffs.emplace_back(distancePt2Line(points[i], pointOnLine, lineDirection));
+
+			if (diffs[i] > maxValue || i == 0)
+				maxValue = diffs[i];
+
+			if (diffs[i] < minValue || i == 0)
+				minValue = diffs[i];
+		}
+
+		maxValue = (double)1 / (maxValue - minValue);
+
+		//Normalisieren der Werte
+		for (int i = 0; i < diffs.size(); i++)
+		{
+			diffs[i] = (diffs[i] - minValue) * maxValue;
+		}
+		
+		// Colour:
+		double meanDiffs = 0, varianceDiffs = 0, standardDeviationDiffs = 0;
+
+		for (int i = 0; i < diffs.size(); i++)
+		{
+			meanDiffs += diffs[i];
+		}
+
+		meanDiffs /= diffs.size();
+
+		for (int i = 0; i < diffs.size(); i++)
+		{
+			varianceDiffs += pow(diffs[i] - meanDiffs, 2);
+		}
+
+		varianceDiffs /= diffs.size();
+
+		standardDeviationDiffs = sqrt(varianceDiffs);
+
+		std::cout << "Mittelwert: " << meanDiffs << std::endl;
+		std::cout << "Varianz: " << varianceDiffs << std::endl;
+		std::cout << "Standardabweichung: " << standardDeviationDiffs << std::endl;
+
+		for (int i = 0; i < points.size(); i++)
+		{
+			pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0 / 255);
+		}
+	}
+}
+
+void action_bestFitPlane(){
+	if (points.empty()){
+		std::cout << "ERROR: cant execute bestFitPlane because points empty." <<  std::endl; 
+	} else {
+		std::vector<double> diffs;
+		
+		computeBestFitPlane(points, cornerPointsPlane);
+		drawBestFitLine = false;
+		drawBestFitPlane = true;
+
+		Point3d pointOnPlane = cornerPointsPlane[0];
+		Point3d direction1(cornerPointsPlane[0].x - cornerPointsPlane[1].x,
+			cornerPointsPlane[0].y - cornerPointsPlane[1].y,
+			cornerPointsPlane[0].z - cornerPointsPlane[1].z);
+		Point3d direction2(cornerPointsPlane[0].x - cornerPointsPlane[2].x,
+			cornerPointsPlane[0].y - cornerPointsPlane[2].y,
+			cornerPointsPlane[0].z - cornerPointsPlane[2].z);
+		Point3d planeDirection(direction1.y * direction2.z - direction2.y * direction1.z,
+			direction1.z * direction2.x - direction2.z * direction1.x,
+			direction1.x * direction2.y - direction2.x * direction1.y);
+
+		double maxValue = DBL_MIN, minValue = DBL_MAX;
+
+		for (int i = 0; i < points.size(); i++)
+		{
+			diffs.emplace_back(abs(distancePt2Plane(points[i], pointOnPlane, planeDirection)));
+
+			if (diffs[i] > maxValue || i == 0)
+				maxValue = diffs[i];
+
+			if (diffs[i] < minValue || i == 0)
+				minValue = diffs[i];
+		}
+
+		maxValue = (double)1 / (maxValue - minValue);
+
+		//Normalisieren der Werte
+		for (int i = 0; i < diffs.size(); i++)
+		{
+			diffs[i] = (diffs[i] - minValue) * maxValue;
+		}
+		
+		//Colour:
+		double meanDiffs = 0, varianceDiffs = 0, standardDeviationDiffs = 0;
+
+		for (int i = 0; i < diffs.size(); i++)
+		{
+			meanDiffs += diffs[i];
+		}
+
+		meanDiffs /= diffs.size();
+
+		for (int i = 0; i < diffs.size(); i++)
+		{
+			varianceDiffs += pow(diffs[i] - meanDiffs, 2);
+		}
+
+		varianceDiffs /= diffs.size();
+
+		standardDeviationDiffs = sqrt(varianceDiffs);
+
+		std::cout << "Mittelwert: " << meanDiffs << std::endl;
+		std::cout << "Varianz: " << varianceDiffs << std::endl;
+		std::cout << "Standardabweichung: " << standardDeviationDiffs << std::endl;
+
+		for (int i = 0; i < points.size(); i++)
+		{
+			pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0 / 255);
+		}
+	}
+}
+
+
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
+	
 	if (key == GLFW_KEY_1 && action == GLFW_RELEASE)
 	{
 		filename = "data/cone.xyz";
@@ -172,470 +673,60 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		filename = "data/sphere2.xyz";
 	}
 
-    if (key == GLFW_KEY_F && action == GLFW_RELEASE)
-    {
-        /*
-         *
-         * Insert Spherefitting
-         *
-         */
-        // points.clear();
-        // pointsColors.clear();
-
-        // sum x
-		//        std::vector<Point3d>
-		//        points
-		clock_t begin = clock();
-
-        double sum_x = 0, sum_y = 0, sum_z = 0,
-                sum_xx = 0, sum_xy = 0, sum_xz = 0,
-                    sum_yy = 0, sum_yz = 0,
-                    sum_zz = 0,
-                sum_xxx = 0, sum_xxy = 0, sum_xxz = 0, sum_xyy = 0, sum_xyz = 0, sum_xzz = 0,
-                    sum_yyy = 0, sum_yyz = 0, sum_yzz = 0,
-                    sum_zzz = 0;
-
-		#pragma omp parallel for reduction(+: sum_x, sum_y, sum_z,sum_xx, sum_xy, sum_xz,sum_yy, sum_yz,sum_zz,sum_xxx, sum_xxy, sum_xxz, sum_xyy, sum_xyz, sum_xzz,sum_yyy, sum_yyz, sum_yzz, sum_zzz)
-        for(int i = 0; i < points.size(); ++i)
-        {
-            double X  = points[i].x;
-            double XX = X*X;
-            double Y  = points[i].y;
-            double YY = Y*Y;
-            double Z  = points[i].z;
-            double ZZ = Z*Z;
-
-            sum_x += X;
-            sum_xx += XX;
-            sum_xxx += XX*X;
-            sum_y += Y;
-            sum_yy += YY;
-            sum_yyy += YY*Y;
-            sum_z += Z;
-            sum_zz += ZZ;
-            sum_zzz += ZZ*Z;
-
-            sum_xy += X*Y;
-            sum_yz += Y*Z;
-            sum_xz += X*Z;
-
-            sum_xxy += XX*Y;
-            sum_xxz += XX*Z;
-            sum_xyy += YY*X;
-            sum_yyz += YY*Z;
-            sum_xzz += ZZ*X;
-            sum_yzz += ZZ*Y;
-        }
-        double A1 = sum_xx + sum_yy + sum_zz;
-
-        int n = points.size();
-
-        double a = 2 * (sum_x * sum_x - n * sum_xx);
-        double b = 2 * (sum_x * sum_y - n * sum_xy);
-        double c = 2 * (sum_x * sum_z - n * sum_xz);
-        double d = - n * (sum_xxx + sum_xyy + sum_xzz) + A1 * sum_x;
-
-        double e = 2 * (sum_x * sum_y - n * sum_xy);
-        double f = 2 * (sum_y * sum_y - n * sum_yy);
-        double g = 2 * (sum_y * sum_z - n * sum_yz);
-        double h = - n * (sum_xxy + sum_yyy + sum_yzz) + A1 * sum_y;
-
-        double j = 2 * (sum_x * sum_z - n * sum_xz);
-        double k = 2 * (sum_y * sum_z - n * sum_yz);
-        double l = 2 * (sum_z * sum_z - n * sum_zz);
-        double m = - n * (sum_xxz + sum_yyz + sum_zzz) + A1 * sum_z;
-
-        double delta = a*(f*l - g*k)-e*(b*l-c*k) + j*(b*g-c*f);
-
-        double center_x = (d*(f*l-g*k) -h*(b*l-c*k) +m*(b*g-c*f))/delta;
-        double center_y = (a*(h*l-m*g) -e*(d*l-m*c) +j*(d*g-h*c))/delta;
-        double center_z = (a*(f*m-h*k) -e*(b*m-d*k) +j*(b*h-d*f))/delta;
-
-		bestFitSphereCenter = Point3d(center_x, center_y, center_z);
-
-        bestFitSphereRadius = sqrt(pow(center_x,2)+
-                      pow(center_y,2)+
-                      pow(center_z,2)+
-                      (A1-2*(center_x*sum_x+
-                             center_y*sum_y+
-                             center_z*sum_z))/n);
-
-		clock_t end = clock();
-		std::cout << "Time needed to calculate Best Fit Sphere: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
-
-		std::vector<double> diffs;
-
-		double maxValue = DBL_MIN, minValue = DBL_MAX;
-
-		for (int i = 0; i < points.size(); i++)
-		{
-			diffs.emplace_back(abs(distance3d(bestFitSphereCenter, points[i]) - bestFitSphereRadius));
-
-			if (diffs[i] > maxValue || i == 0)
-				maxValue = diffs[i];
-
-			if (diffs[i] < minValue || i == 0)
-				minValue = diffs[i];
-		}
-
-		maxValue = (double)1 / (maxValue - minValue);
-
-		//Normalisieren der Werte
-		for (int i = 0; i < diffs.size(); i++)
-		{
-			diffs[i] = (diffs[i] - minValue) * maxValue;
-		}
-
-		//Stadnardabweichung/Mittelwert/Varianz
-		double meanDiffs = 0, varianceDiffs = 0, standardDeviationDiffs = 0;
-
-		for (int i = 0; i < diffs.size(); i++)
-		{
-			meanDiffs += diffs[i];
-		}
-
-		meanDiffs /= diffs.size();
-
-		for (int i = 0; i < diffs.size(); i++)
-		{
-			varianceDiffs += pow(diffs[i] - meanDiffs, 2);
-		}
-
-		varianceDiffs /= diffs.size();
-
-		standardDeviationDiffs = sqrt(varianceDiffs);
-
-		std::cout << "Mittelwert: " << meanDiffs << std::endl;
-		std::cout << "Varianz: " << varianceDiffs << std::endl;
-		std::cout << "Standardabweichung: " << standardDeviationDiffs << std::endl;
-		std::cout << "Radius: " << bestFitSphereRadius << std::endl;
-		std::cout << "Center: " << bestFitSphereCenter.x << ", " << bestFitSphereCenter.y << ", " << bestFitSphereCenter.z << std::endl;
-
-		for (int i = 0; i < points.size(); i++)
-		{
-			pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0 / 255);
-		}
-
-		drawBestFitSphere = true;
-    }
 	if (key == GLFW_KEY_R && action == GLFW_RELEASE)
 	{
-		//try to load point cloud data from file
-		clock_t begin = clock();
-
-		//loadFileXYZ("data/Stanford Dragon.xyz", points);
-		points.clear();
-		pointsColors.clear();
-		cornerPointsLine.clear();
-		cornerPointsPlane.clear();
-		drawBestFitLine = false;
-		drawBestFitPlane = false;
-        drawBestFitSphere = false;
-		loadFileXYZ(filename.c_str(), points); // FILENAME MOVED TO LINE 32
-
-		//Tipp -> #pragma omp parallel for
-
-		clock_t end = clock();
-		std::cout << "Time needed to load data: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
-
-		//OK, we now compute the min and max coordinates for our bounding box
-		updateScene(points);
-
-		//Load KD-Tree
-		//----------------------------------------------------------------------------
-		begin = clock();
-
-		data = KDTree(points, startDim);
-
-		end = clock();
-		std::cout << "Time needed to build kdTree: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
-		//----------------------------------------------------------------------------
-
-		/* Make the window's context current */
-		glfwMakeContextCurrent(window);
-
-		//Prepare our virtual camera
-		glfwGetFramebufferSize(window, &m_windowWidth, &m_windowHeight);
-
-		//Initialize Camera
-		m_camera.setWindowSize(m_windowWidth, m_windowHeight);    //setup window parameters
-		m_camera.initializeCamera(m_sceneCenter, m_sceneRadius);  //set the camera outside the scene
-		m_camera.updateProjection();                              //adjust projection to window size
-
-																  //Farben der Punkte festlegen
-		setDefaultPointColors(pointsColors, points.size(), Point3d(0, 255, 0));
+		action_loadFile(window);
 	}
 
+	if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
+	{
+		action_rangeRequest();
+	}
+
+    if (key == GLFW_KEY_F && action == GLFW_RELEASE)
+    {
+		action_bestFitSphere();
+	}
+
+	if (key == GLFW_KEY_N && action == GLFW_RELEASE)
+	{
+		action_nearestNeighbor();
+	}
+	
 	if (!points.empty())
 	{
-        if (key == GLFW_KEY_SPACE && action == GLFW_RELEASE)
-		{
-			//KDTree - RangeAbfrage
-			//----------------------------------------------------------------------------
-			abfrage.clear();
-			int random = (std::rand() % (points.size()));
-			abfrage.emplace_back(points[random]);
-
-			Point3d S = m_bbmax - m_bbmin;
-			abfrageLaenge = S.x * 0.25;
-
-			clock_t begin = clock();
-			ptrRes = data.getRange(abfrageLaenge, abfrage[0], startDim);
-
-			res.clear();
-			for(Point3d* point : ptrRes)
-			{
-				res.emplace_back(*point);
-			}
-
-			clock_t end = clock();
-
-			setDefaultPointColors(resColors, res.size(), Point3d(255, 0, 0));
-			setDefaultPointColors(abfrageColors, abfrage.size(), Point3d(125, 125, 0));
-
-			std::cout << "Time needed to calculate range query: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
-			//----------------------------------------------------------------------------
-		}
-
-		if (key == GLFW_KEY_N && action == GLFW_RELEASE)
-		{
-			abfrage.clear();
-			int random = (std::rand() % (points.size()));
-			abfrage.emplace_back(points[random]);
-
-			res.clear();
-
-			clock_t begin = clock();
-			ptrRes = data.getKNN(abfrage[0], numNeighborhood);
-
-			res.clear();
-			for(Point3d* point : ptrRes)
-			{
-				res.emplace_back(*point);
-			}
-			clock_t end = clock();
-
-			setDefaultPointColors(resColors, res.size(), Point3d(255, 0, 0));
-			setDefaultPointColors(abfrageColors, abfrage.size(), Point3d(125, 125, 0));
-
-			std::cout << "Time needed to calculate NN: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
-		}
-
 		if (key == GLFW_KEY_UP && action == GLFW_RELEASE)
 		{
-			//! check if Nearest Neighbour was already searched
-			if(abfrage.size()<1){
-				//! if not, select random point
-				abfrage.clear();
-				int random = (std::rand() % (points.size()));
-				abfrage.emplace_back(points[random]);
-			}
-
-			numNeighborhood++;
-
-			ptrRes = data.getKNN(abfrage[0], numNeighborhood);
-
-			res.clear();
-			for(Point3d* point : ptrRes)
-			{
-				res.emplace_back(*point);
-			}
-
-			setDefaultPointColors(resColors, res.size(), Point3d(255, 0, 0));
-			setDefaultPointColors(abfrageColors, abfrage.size(), Point3d(125, 125, 0));
+			action_incNeighborhood();
 		}
 
 		if (key == GLFW_KEY_DOWN && action == GLFW_RELEASE)
 		{
-
-			//! check if Nearest Neighbour was already searched
-			if(abfrage.size()<1){
-				//! if not, select random point
-				abfrage.clear();
-				int random = (std::rand() % (points.size()));
-				abfrage.emplace_back(points[random]);
-			}
-
-			if (numNeighborhood > 1)
-			{
-				numNeighborhood--;
-			}
-
-			ptrRes = data.getKNN(abfrage[0], numNeighborhood);
-
-			res.clear();
-			for(Point3d* point : ptrRes)
-			{
-				res.emplace_back(*point);
-			}
-
-			setDefaultPointColors(resColors, res.size(), Point3d(255, 0, 0));
-			setDefaultPointColors(abfrageColors, abfrage.size(), Point3d(125, 125, 0));
+			action_decNeighborhood();
 		}
 
 		if (key == GLFW_KEY_S && action == GLFW_RELEASE)
 		{
-			clock_t begin = clock();
-			oldPoints = points;
-			setDefaultPointColors(oldPointsColors, oldPoints.size(), Point3d(255, 255, 255));
-			points = data.smooth(points, numNeighborhood);
-
-			//data = KDTree(points, startDim);
-			clock_t end = clock();
-
-			std::cout << "Time needed to smooth: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
-
-			//Einf�rben der Differenz zum Vorg�ngermodel
-			std::vector<double> diffs;
-			double maxValue = 0, minValue = 0;
-
-			for (int i = 0; i < oldPoints.size(); i++)
-			{
-				diffs.emplace_back(sqrt(pow(points[i].x - oldPoints[i].x, 2)
-					+ pow(points[i].y - oldPoints[i].y, 2)
-					+ pow(points[i].z - oldPoints[i].z, 2)));
-
-				if (diffs[i] > maxValue || i == 0)
-					maxValue = diffs[i];
-
-				if (diffs[i] < minValue || i == 0)
-					minValue = diffs[i];
-			}
-
-			maxValue = (double)1 / (maxValue - minValue);
-
-			//Normalisieren der Werte
-			for (int i = 0; i < diffs.size(); i++)
-			{
-				diffs[i] = (diffs[i] - minValue) * maxValue;
-			}
-
-			//�bernahme der Werte
-			for (int i = 0; i < oldPoints.size(); i++)
-			{
-				pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0 / 255);
-			}
+			action_smooth();
 		}
 
 		if (key == GLFW_KEY_T && action == GLFW_RELEASE)
 		{
-			clock_t begin = clock();
-
-			data.thinning(numNeighborhood);
-			points = data.getNotThinnedPoints();
-			clock_t end = clock();
-
-			data = KDTree(points, startDim);
-
-			std::cout << points.size() << " points left." << std::endl;
-			std::cout << "Time needed to thinn: " << double(end - begin) / CLOCKS_PER_SEC << "s\r";
+			action_thinning();
 		}
 
 		if (key == GLFW_KEY_B && action == GLFW_RELEASE)
 		{
-			std::vector<double> diffs;
-
 			//Einfärben
 			if (doComputeBestFitLine)
 			{
-				computeBestFitLine(points, cornerPointsLine);
-				drawBestFitLine = true;
-				drawBestFitPlane = false;
-
-				Point3d pointOnLine = cornerPointsLine[0];
-				Point3d lineDirection(cornerPointsLine[0].x - cornerPointsLine[1].x,
-					cornerPointsLine[0].y - cornerPointsLine[1].y,
-					cornerPointsLine[0].z - cornerPointsLine[1].z);
-
-				double maxValue = DBL_MIN, minValue = DBL_MAX;
-
-				for (int i = 0; i < points.size(); i++)
-				{
-					diffs.emplace_back(distancePt2Line(points[i], pointOnLine, lineDirection));
-
-					if (diffs[i] > maxValue || i == 0)
-						maxValue = diffs[i];
-
-					if (diffs[i] < minValue || i == 0)
-						minValue = diffs[i];
-				}
-
-				maxValue = (double)1 / (maxValue - minValue);
-
-				//Normalisieren der Werte
-				for (int i = 0; i < diffs.size(); i++)
-				{
-					diffs[i] = (diffs[i] - minValue) * maxValue;
-				}
-
+				action_bestFitLine();
 				doComputeBestFitLine = false;
 			}
 			else
 			{
-				computeBestFitPlane(points, cornerPointsPlane);
-				drawBestFitLine = false;
-				drawBestFitPlane = true;
-
-				Point3d pointOnPlane = cornerPointsPlane[0];
-				Point3d direction1(cornerPointsPlane[0].x - cornerPointsPlane[1].x,
-					cornerPointsPlane[0].y - cornerPointsPlane[1].y,
-					cornerPointsPlane[0].z - cornerPointsPlane[1].z);
-				Point3d direction2(cornerPointsPlane[0].x - cornerPointsPlane[2].x,
-					cornerPointsPlane[0].y - cornerPointsPlane[2].y,
-					cornerPointsPlane[0].z - cornerPointsPlane[2].z);
-				Point3d planeDirection(direction1.y * direction2.z - direction2.y * direction1.z,
-					direction1.z * direction2.x - direction2.z * direction1.x,
-					direction1.x * direction2.y - direction2.x * direction1.y);
-
-				double maxValue = DBL_MIN, minValue = DBL_MAX;
-
-				for (int i = 0; i < points.size(); i++)
-				{
-					diffs.emplace_back(abs(distancePt2Plane(points[i], pointOnPlane, planeDirection)));
-
-					if (diffs[i] > maxValue || i == 0)
-						maxValue = diffs[i];
-
-					if (diffs[i] < minValue || i == 0)
-						minValue = diffs[i];
-				}
-
-				maxValue = (double)1 / (maxValue - minValue);
-
-				//Normalisieren der Werte
-				for (int i = 0; i < diffs.size(); i++)
-				{
-					diffs[i] = (diffs[i] - minValue) * maxValue;
-				}
-
+				action_bestFitPlane();
 				doComputeBestFitLine = true;
-			}
-
-			double meanDiffs = 0, varianceDiffs = 0, standardDeviationDiffs = 0;
-
-			for (int i = 0; i < diffs.size(); i++)
-			{
-				meanDiffs += diffs[i];
-			}
-
-			meanDiffs /= diffs.size();
-
-			for (int i = 0; i < diffs.size(); i++)
-			{
-				varianceDiffs += pow(diffs[i] - meanDiffs, 2);
-			}
-
-			varianceDiffs /= diffs.size();
-
-			standardDeviationDiffs = sqrt(varianceDiffs);
-
-			std::cout << "Mittelwert: " << meanDiffs << std::endl;
-			std::cout << "Varianz: " << varianceDiffs << std::endl;
-			std::cout << "Standardabweichung: " << standardDeviationDiffs << std::endl;
-
-			for (int i = 0; i < points.size(); i++)
-			{
-				pointsColors[i] = colorFromGradientHSV(diffs[i]) * (1.0 / 255);
 			}
 		}
 	}
@@ -691,41 +782,41 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 				<< "    --pointSizes <small> <big> -   set sizes for drawing points" << std::endl\
 				<< std::endl;
 
-		std::string job = "";
-		double x = 0, y = 0, z = 0, r = 0;
+	std::string job = "";
+	double x = 0, y = 0, z = 0, r = 0;
 
-		// parse arguments
-		for(int i = 1; i<argc; i++){
-			if(argv[i][0] == '-'){
-				std::string option = argv[i];
-				if( option == "-f"){
-					i++;
-					filename = argv[i];
-				} else if( option == "--range") {
-					job = "range";
-					i++;
-					r = std::stod(std::string(argv[i]));
-					i++;
-				 	x= std::stod(std::string(argv[i]));
-					i++;
-					y = std::stod(std::string(argv[i]));
-					i++;
-					z = std::stod(std::string(argv[i]));
-				} else if( option == "--nn") {
-					job = "nn";
-					i++;
-					x = std::stod(std::string(argv[i]));
-					i++;
-					y = std::stod(std::string(argv[i]));
-					i++;
-					z = std::stod(std::string(argv[i]));
-				} else if ( option == "--pointSizes" ){
-					i++;
-					pointSize = std::stod(std::string(argv[i]));
-					// i++;
-					// pointSize_big = std::stod(std::string(argv[i]));
-				}
+	// parse arguments
+	for(int i = 1; i<argc; i++){
+		if(argv[i][0] == '-'){
+			std::string option = argv[i];
+			if( option == "-f"){
+				i++;
+				filename = argv[i];
+			} else if( option == "--range") {
+				job = "range";
+				i++;
+				r = std::stod(std::string(argv[i]));
+				i++;
+				x= std::stod(std::string(argv[i]));
+				i++;
+				y = std::stod(std::string(argv[i]));
+				i++;
+				z = std::stod(std::string(argv[i]));
+			} else if( option == "--nn") {
+				job = "nn";
+				i++;
+				x = std::stod(std::string(argv[i]));
+				i++;
+				y = std::stod(std::string(argv[i]));
+				i++;
+				z = std::stod(std::string(argv[i]));
+			} else if ( option == "--pointSizes" ){
+				i++;
+				pointSize = std::stod(std::string(argv[i]));
+				// i++;
+				// pointSize_big = std::stod(std::string(argv[i]));
 			}
+		}
 	}
 
 	//Create an OpenGL window with GLFW

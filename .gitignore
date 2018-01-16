@@ -1,4 +1,8 @@
+*.idb
 *.o
+*.ipch
+*.tlog
+*.db
 Makefile
 *.swp
 moc_*

@@ -13,6 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="shaders">
+      <UniqueIdentifier>{319dd5b7-f7fb-44ed-b3c6-ad7fda544db9}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="source\GLcamera.cpp">
@@ -53,5 +56,16 @@
     <ClInclude Include="include\SVD.h">
       <Filter>Headerdateien</Filter>
     </ClInclude>
+    <ClInclude Include="Shader.h">
+      <Filter>Headerdateien</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Vertex.shader">
+      <Filter>shaders</Filter>
+    </None>
+    <None Include="Fragment.shader">
+      <Filter>shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

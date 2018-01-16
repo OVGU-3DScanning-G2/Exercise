@@ -7,7 +7,7 @@
 #include <vector>
 
 Point3d computeCenter(const std::vector<Point3d>& points);                  ///< Computes and returns the center of the point cloud
-void computeCoarianceMatrix(const std::vector<Point3d>& points, Matrix& M); ///< Coputes the 3x3 covariance matrix
+void computeCovarianceMatrix3x3(const std::vector<Point3d>& points, Matrix& M); ///< Coputes the 3x3 covariance matrix
 void computeBestFitLine (const std::vector<Point3d>& points, std::vector<Point3d>& corners);  ///< Computes best-fit line
 void computeBestFitPlane(const std::vector<Point3d>& points, std::vector<Point3d>& corners);  ///< Computes best-fit plane
 

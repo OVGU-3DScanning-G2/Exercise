@@ -22,13 +22,13 @@
 #include "../include/Point3d.h"
 #include "../include/KDTree.h"
 #include "../include/Algorithms.h"
+#include "../include/SVD.h"
 
 //Normally compiler & linker options are set in the project file and not in the source code
 //Its just here to show what dependencies are needed
 #pragma comment(lib, "opengl32.lib")     //link against standard MS Windows OpenGL-Library
 #pragma comment(lib, "glu32.lib")        //link to some standard OpenGL convenience functions
 #pragma comment(lib, "GLFW/glfw3.lib")   //link against the the GLFW OpenGL SDK
-
 
 std::string filename = "../data/cone.xyz";
 
@@ -54,13 +54,15 @@ std::vector<Point3d> res;
 std::vector<Point3d> resColors;
 std::vector<Point3d*> ptrRes;
 std::vector<Point3d> points;
+std::vector<Point3d> pointsNormals;
 std::vector<Point3d> pointsColors;
 std::vector<Point3d> abfrage;
 std::vector<Point3d> abfrageColors;
 std::vector<Point3d> oldPoints;
 std::vector<Point3d> oldPointsColors;
 std::vector<Point3d> cornerPointsLine, cornerPointsPlane;
-bool drawBestFitLine = false, drawBestFitPlane = false, doComputeBestFitLine = true,drawBestFitSphere=false;
+bool drawBestFitLine = false, drawBestFitPlane = false, doComputeBestFitLine = true, drawBestFitSphere = false,
+activeShader = false;
 double bestFitSphereRadius = 0;
 Point3d bestFitSphereCenter;
 KDTree data;
@@ -137,6 +139,7 @@ void action_loadFile(GLFWwindow* window) {
 		drawBestFitLine = false;
 		drawBestFitPlane = false;
         drawBestFitSphere = false;
+		activeShader = false;
 		loadFileXYZ(filename.c_str(), points); // FILENAME MOVED TO LINE 32
 
 		//Tipp -> #pragma omp parallel for
@@ -624,6 +627,24 @@ void action_bestFitPlane(){
 	}
 }
 
+void action_shader()
+{
+	//Berechnung der Normalen
+	for (int i = 0; i < points.size(); i++)
+	{
+		Matrix M(3, 3);
+
+		computeCovarianceMatrix3x3(points, M);
+		SVD::computeSymmetricEigenvectors(M);
+
+		const Point3d kleinsterEigenVektor(M(0, 2), M(1, 2), M(2, 2));
+
+		pointsNormals.push_back(kleinsterEigenVektor);
+	}
+
+	activeShader = true;
+}
+
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
@@ -728,6 +749,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 				action_bestFitPlane();
 				doComputeBestFitLine = true;
 			}
+		}
+
+		if (key == GLFW_KEY_X && action == GLFW_RELEASE)
+		{
+			action_shader();
 		}
 	}
 }
@@ -969,6 +995,15 @@ void drawPoints(std::vector<Point3d>& points, std::vector<Point3d>& pointColors,
 	{ /* Drawing Points with VertexArrays */
 		glEnableClientState(GL_COLOR_ARRAY);
 		glEnableClientState(GL_VERTEX_ARRAY); //enable data upload to GPU
+
+		if (activeShader)
+		{
+			glEnableClientState(GL_MODELVIEW_MATRIX);
+			glEnableClientState(GL_NORMAL_ARRAY);
+
+			glNormalPointer(GL_DOUBLE, sizeof(Point3d), &pointsNormals[0]);
+		}
+
 		glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &points[0]);
 
 		if (!pointColors.empty())
@@ -980,6 +1015,12 @@ void drawPoints(std::vector<Point3d>& points, std::vector<Point3d>& pointColors,
 		glDrawArrays(GL_POINTS, 0, (unsigned int)points.size());
 		glDisableClientState(GL_COLOR_ARRAY);  //disable data upload to GPU
 		glDisableClientState(GL_VERTEX_ARRAY);  //disable data upload to GPU
+
+		if (activeShader)
+		{
+			glDisableClientState(GL_MODELVIEW_MATRIX);
+			glDisableClientState(GL_NORMAL_ARRAY);
+		}
 	}
 }
 

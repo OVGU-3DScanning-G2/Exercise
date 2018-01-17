@@ -30,7 +30,7 @@
 #pragma comment(lib, "glu32.lib")        //link to some standard OpenGL convenience functions
 #pragma comment(lib, "GLFW/glfw3.lib")   //link against the the GLFW OpenGL SDK
 
-std::string filename = "../data/cone.xyz";
+std::string filename = "data/cone.xyz";
 
 //using namespace std; //everything what is in the "Standard" C++ namespace, so the "std::" prefix can be avoided
 
@@ -189,7 +189,7 @@ void action_bestFitSphere(){
 	//        points
 	if (points.empty())
 	{
-		std::cout << "ERROR: cant execute bestFitSphere because points empty." <<  std::endl; 
+		std::cout << "ERROR: cant execute bestFitSphere because points empty." <<  std::endl;
 	} else {
 		/*
 		 *
@@ -312,7 +312,7 @@ void action_rangeRequest() {
 		//KDTree - RangeAbfrage
 	if (points.empty())
 	{
-		std::cout << "ERROR: cant execute RangeReuest because points empty." <<  std::endl; 
+		std::cout << "ERROR: cant execute RangeReuest because points empty." <<  std::endl;
 	} else {
 		//----------------------------------------------------------------------------
 		abfrage.clear();
@@ -344,7 +344,7 @@ void action_rangeRequest() {
 void action_nearestNeighbor() {
 	if (points.empty())
 	{
-		std::cout << "ERROR: cant execute NearestNeighbor because points empty." <<  std::endl; 
+		std::cout << "ERROR: cant execute NearestNeighbor because points empty." <<  std::endl;
 	} else {
 		abfrage.clear();
 		int random = (std::rand() % (points.size()));
@@ -372,7 +372,7 @@ void action_nearestNeighbor() {
 void action_incNeighborhood() {
 	//! check if Nearest Neighbour was already searched
 	if (points.empty()){
-		std::cout << "ERROR: cant execute incNeighborhood because points empty." <<  std::endl; 
+		std::cout << "ERROR: cant execute incNeighborhood because points empty." <<  std::endl;
 	} else {
 		if(abfrage.size()<1){
 			//! if not, select random point
@@ -399,7 +399,7 @@ void action_incNeighborhood() {
 void action_decNeighborhood() {
 	//! check if Nearest Neighbour was already searched
 	if (points.empty()){
-		std::cout << "ERROR: cant execute decNeighborhood because points empty." <<  std::endl; 
+		std::cout << "ERROR: cant execute decNeighborhood because points empty." <<  std::endl;
 	} else {
 		if(abfrage.size()<1){
 			//! if not, select random point
@@ -427,7 +427,7 @@ void action_decNeighborhood() {
 
 void action_smooth() {
 	if (points.empty()){
-		std::cout << "ERROR: cant execute smooth because points empty." <<  std::endl; 
+		std::cout << "ERROR: cant execute smooth because points empty." <<  std::endl;
 	} else {
 		clock_t begin = clock();
 		oldPoints = points;
@@ -474,7 +474,7 @@ void action_smooth() {
 
 void action_thinning(){
 	if (points.empty()){
-		std::cout << "ERROR: cant execute thinning because points empty." <<  std::endl; 
+		std::cout << "ERROR: cant execute thinning because points empty." <<  std::endl;
 	} else {
 		clock_t begin = clock();
 
@@ -491,10 +491,10 @@ void action_thinning(){
 
 void action_bestFitLine(){
 	if (points.empty()){
-		std::cout << "ERROR: cant execute bestFitLine because points empty." <<  std::endl; 
+		std::cout << "ERROR: cant execute bestFitLine because points empty." <<  std::endl;
 	} else {
 		std::vector<double> diffs;
-		
+
 		computeBestFitLine(points, cornerPointsLine);
 		drawBestFitLine = true;
 		drawBestFitPlane = false;
@@ -524,7 +524,7 @@ void action_bestFitLine(){
 		{
 			diffs[i] = (diffs[i] - minValue) * maxValue;
 		}
-		
+
 		// Colour:
 		double meanDiffs = 0, varianceDiffs = 0, standardDeviationDiffs = 0;
 
@@ -557,10 +557,10 @@ void action_bestFitLine(){
 
 void action_bestFitPlane(){
 	if (points.empty()){
-		std::cout << "ERROR: cant execute bestFitPlane because points empty." <<  std::endl; 
+		std::cout << "ERROR: cant execute bestFitPlane because points empty." <<  std::endl;
 	} else {
 		std::vector<double> diffs;
-		
+
 		computeBestFitPlane(points, cornerPointsPlane);
 		drawBestFitLine = false;
 		drawBestFitPlane = true;
@@ -596,7 +596,7 @@ void action_bestFitPlane(){
 		{
 			diffs[i] = (diffs[i] - minValue) * maxValue;
 		}
-		
+
 		//Colour:
 		double meanDiffs = 0, varianceDiffs = 0, standardDeviationDiffs = 0;
 
@@ -630,6 +630,9 @@ void action_bestFitPlane(){
 void action_shader()
 {
 	//Berechnung der Normalen
+	std::cout << "Calculating normals..." << std::endl;
+	clock_t begin = clock();
+
 	for (int i = 0; i < points.size(); i++)
 	{
 		Matrix M(3, 3);
@@ -642,13 +645,16 @@ void action_shader()
 		pointsNormals.push_back(kleinsterEigenVektor);
 	}
 
+	clock_t end = clock();
+	std::cout << "Time needed to calculate Normals: " << double(end - begin) / CLOCKS_PER_SEC << "s\r" << std::endl;
+
 	activeShader = true;
 }
 
 
 void key_callback(GLFWwindow* window, int key, int scancode, int action, int mods)
 {
-	
+
 	if (key == GLFW_KEY_1 && action == GLFW_RELEASE)
 	{
 		filename = "data/cone.xyz";
@@ -713,7 +719,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 	{
 		action_nearestNeighbor();
 	}
-	
+
 	if (!points.empty())
 	{
 		if (key == GLFW_KEY_UP && action == GLFW_RELEASE)

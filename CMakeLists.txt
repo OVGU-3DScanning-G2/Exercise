@@ -15,7 +15,8 @@ set(INCLUDE
     include/Algorithms.h
     include/KDTree.h
     include/GLcamera.h
-    include/Point3d.h)
+    include/Point3d.h
+    include/Shader.h)
 
 set(SOURCE
     source/SVD.cpp
@@ -23,7 +24,8 @@ set(SOURCE
     source/KDTree.cpp
     source/GLcamera.cpp
     source/OpenGL_Application.cpp
-    source/Point3d.cpp)
+    source/Point3d.cpp
+    source/Shader.cpp)
 
 aux_source_directory(GLFW EXTERN)
 set (CMAKE_CXX_STANDARD 11)

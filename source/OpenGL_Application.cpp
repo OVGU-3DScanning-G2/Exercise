@@ -636,10 +636,41 @@ void action_bestFitPlane(){
 	}
 }
 
+
 void action_shader()
 {
 	//Berechnung der Normalen
-	std::cout << "Calculating normals..." << std::endl;
+	std::cout << "Calculating normals... (variant 1)" << std::endl;
+	clock_t begin = clock();
+ 
+
+	int numOfPoints = points.size();
+	std::cout << "Progress = " << 0 << "/" << numOfPoints; 
+	std::flush(std::cout);
+	for (int i = 0; i < points.size(); i++)
+	{
+		Matrix M(3, 3);
+
+		computeCovarianceMatrix3x3(points, M);
+		SVD::computeSymmetricEigenvectors(M);
+ 
+		const Point3d kleinsterEigenVektor(M(0, 2), M(1, 2), M(2, 2));
+ 
+		pointsNormals.push_back(kleinsterEigenVektor);
+		std::cout << "\rProgress = " << i+1 << "/" << numOfPoints << "     ";
+		std::flush(std::cout);
+	}
+ 
+	clock_t end = clock();
+	std::cout << std::endl << "Time needed to calculate Normals: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
+ 
+	activeShader = true;
+}
+
+void action_shader_2()
+{
+	//Berechnung der Normalen
+	std::cout << "Calculating normals... (variant 1)" << std::endl;
 	clock_t begin = clock();
 
 	std::vector<Point3d*> shaderNeighboursPointer;
@@ -673,7 +704,7 @@ void action_shader()
 	}
 
 	clock_t end = clock();
-	std::cout << std::endl << "Time needed to calculate Normals: " << double(end - begin) / CLOCKS_PER_SEC << "s\r" << std::endl;
+	std::cout << std::endl << "Time needed to calculate Normals: " << double(end - begin) / CLOCKS_PER_SEC << "s" << std::endl;
 
 	activeShader = true;
 }
@@ -785,6 +816,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 		}
 
 		if (key == GLFW_KEY_X && action == GLFW_RELEASE)
+		{
+			action_shader_2();
+		}
+		
+		if (key == GLFW_KEY_C && action == GLFW_RELEASE)
 		{
 			action_shader();
 		}
@@ -1032,18 +1068,18 @@ void drawPoints(std::vector<Point3d>& points, std::vector<Point3d>& pointColors,
 		if (activeShader)
 		{
 			myShader.bind();
-			glEnableClientState(GL_MODELVIEW_MATRIX);
+// 			glEnableClientState(GL_MODELVIEW_MATRIX);
 			glEnableClientState(GL_NORMAL_ARRAY);
 
 			glNormalPointer(GL_DOUBLE, sizeof(Point3d), &pointsNormals[0]);
-		} else {
-			glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &points[0]);
-
-			if (!pointColors.empty())
-			glColorPointer(3, GL_DOUBLE, sizeof(Point3d), &pointColors[0]);
-			else
-			glColor3ub(0, 0, 0);
 		}
+		glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &points[0]);
+
+		if (!pointColors.empty())
+		glColorPointer(3, GL_DOUBLE, sizeof(Point3d), &pointColors[0]);
+		else
+		glColor3ub(0, 0, 0);
+	
 
 		//draw point cloud
 		glDrawArrays(GL_POINTS, 0, (unsigned int)points.size());
@@ -1052,7 +1088,7 @@ void drawPoints(std::vector<Point3d>& points, std::vector<Point3d>& pointColors,
 
 		if (activeShader)
 		{
-			glDisableClientState(GL_MODELVIEW_MATRIX);
+// 			glDisableClientState(GL_MODELVIEW_MATRIX); // << gibt es nicht
 			glDisableClientState(GL_NORMAL_ARRAY);
 			myShader.unbind();
 		}

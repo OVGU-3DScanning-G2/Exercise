@@ -2,9 +2,12 @@
 #define MY_SHADER_H
 
 #include <string>
-#include "windows.h"
-#include "gl/gl.h"
-#include "glext.h"
+// #include "windows.h"
+#include "GL/glew.h"
+#include "GL/glx.h"
+#include "GL/glxext.h"
+
+#define IRR_OGL_LOAD_EXTENSION glXGetProcAddress
 
 //Shader programs are written in GLSL. GLSL is a separate programming language for graphics cards.
 //The source code is provided as a text string. This string is transferred to the graphics card (driver)
@@ -12,7 +15,7 @@
 //is not executed with CPU/RAM but with GPU/VRAM directly.
 
 //Note: the following text strings contain the sources of the Vertex and Fragment Shader. The text string
-//are enclosed in R(" text "), we as the R("") indicates a so called "string laterals" (C++11 feature), which means that 
+//are enclosed in R(" text "), we as the R("") indicates a so called "string laterals" (C++11 feature), which means that
 //the compiler handles the entire text as a string even if it contains multiple lines. Without R("") each line must be
 //finished with "\n" to indicate a new line.
 
@@ -32,16 +35,16 @@ void main(void)                               //all the GLSL-functions that star
                                               //"gl_Vertex" is the 3D coordinat0e that the GPU should process (provided by our calls to glVertex3(x,y,z) or glVertexPointer(....))
   N = normalize(gl_NormalMatrix * gl_Normal); //"gl_Normal" is the 3D normal vector that the GPU should process (provided by our calls to glNormal3(x,y,z) or glNormalPointer(....))
   FrontColor = gl_Color;                      //"gl_Color" contains the color that we have set per point with glColor3ub(R,G,B) or glColorPointer.
-  
+
   gl_Position = gl_ModelViewProjectionMatrix * gl_Vertex; //looks as a duplicate, but this function must always be supplied, because the Vertex shader always uses the gl_Position variable which cannot be empty!
 }
 )";
 
 //Here is GLSL source code for the fragment shader (aka "pixel shader")
-//Fragment shader is for manipulating the 2D-pixels after rasterization (2d screen position and color). 
-//Here we manipulate the color by applying a Phong Shading, which let our pointclouds look nice. 
+//Fragment shader is for manipulating the 2D-pixels after rasterization (2d screen position and color).
+//Here we manipulate the color by applying a Phong Shading, which let our pointclouds look nice.
 //Phong shading simulates real light behaviour, where the final color results from the sum of the ambient,diffuse und specular reflection terms.
-//The amount of light reflected depends on the position of camera and light source and the orientation of the surface (normal vectors). 
+//The amount of light reflected depends on the position of camera and light source and the orientation of the surface (normal vectors).
 static std::string FragmentShaderSource = R"(
 varying vec3 N;
 varying vec3 v;
@@ -51,25 +54,25 @@ void main(void)
 {
   //our own definitions
   vec3 lightPosition=vec3(1.0,1.0,1.0);         //in normalized coordinates (1,1,1). I want the light coming diagonal from the back
-  vec4 ambientColor=vec4(0.1, 0.1, 0.1, 1.0);   //ambient (surrounding) color is quite dark 
+  vec4 ambientColor=vec4(0.1, 0.1, 0.1, 1.0);   //ambient (surrounding) color is quite dark
   //vec4 diffuseColor=vec4(0.4, 0.4, 0.4, 1.0); //you might give the diffuse light a certain fixed color, but I want to take the color that we define outside by glColor (transferred from Vertex shader using "varying" variable FrontColor)
   vec4 specularColor=vec4(0.7, 0.7, 0.7, 1.0);  //Shiny surfaces create reflecting spots, the color of these spots should be bright
   float shininess=100.0;                        //Shininess - the higher the reflective the surface (is a parameter of the specular term)
-  
+
   vec3 N = normalize(N);                        //if not already done outside, we normalize the normal vector here
 
   vec3 L = normalize(lightPosition - v);        //L is the vector from the 3D position to the light position (v is 3D and was transferred from the vertex shader using a "varying" variable)
   //vec3 L = normalize( vec3(1,1,1) );
 
-  vec3 E = normalize(-v);                       // is the vector from 3d position to the camera. We are in Eye Coordinates, so EyePos is (0,0,0) 
+  vec3 E = normalize(-v);                       // is the vector from 3d position to the camera. We are in Eye Coordinates, so EyePos is (0,0,0)
   vec3 R = normalize(-reflect(L, N));           // For a given incident vector I and surface normal N reflect returns the reflection direction calculated as I - 2.0 * dot(N, I) * N. N should be normalized.
 
-  //calculate Ambient Term: 
-  vec4 Iamb = ambientColor;                     // we just assign our own definition. The variable Iamb is useless it is just for sticking to the names given in the Phong formula  
+  //calculate Ambient Term:
+  vec4 Iamb = ambientColor;                     // we just assign our own definition. The variable Iamb is useless it is just for sticking to the names given in the Phong formula
 
   //calculate Diffuse Term:                     // the amount of diffuse reflected light depends on the surface normal N and the light position L
   vec4 Idiff = FrontColor * max(abs(dot(N, L)), 0.0);  //we take our object color as diffuse color  !! ABS was added by our own as a trick to overcome inconsistent normal orientation !!
-  //vec4 Idiff=vec4(abs(N.x), abs(N.y), abs(N.z), 1)* max(abs(dot(N, L)), 0.0); 
+  //vec4 Idiff=vec4(abs(N.x), abs(N.y), abs(N.z), 1)* max(abs(dot(N, L)), 0.0);
 
 
   Idiff = clamp(Idiff, 0.0, 1.0);               //make sure that Idiff ranges between 0 and 1
@@ -95,7 +98,7 @@ void main(void)
 ///////////////////////////////////////////////////////////////////////////////////////////////
 /** @brief class that implements an easy interface to OpenGL shader functionality.
 
-    @par usage example: 
+    @par usage example:
     @code{.cpp}
       Shader myShaderProgram;                         //create only once
       myShaderProgram.initializeOpenGLextensions();   //call only once but after you have a valid OpenGL context (e.g. after the call to glfwMakeContextCurrent(window);)
@@ -106,19 +109,19 @@ void main(void)
       myShader.unbind(); //deactivate shader
 
       //...draw other things that should not (or can not) be processed by this shader
-    @endcode 
+    @endcode
 */
 class Shader
 {
   public:
     Shader();
+    void initializeOpenGLextensions();
 
     void createShaderProgram(); ///< creates our shader program (if you dont have QT)
     void bind()   const { if (m_programID != 0) glUseProgram(m_programID); }  ///< activates shader program on the GPU
     void unbind() const { if (m_programID != 0) glUseProgram(0); }            ///< deactivates shader program on the GPU
 
   private:
-    void initializeOpenGLextensions();
     bool checkShaderCompilationStatus(GLhandleARB shaderObject) const;
     GLuint m_programID = 0;
 

@@ -1,4 +1,4 @@
-#include "Shader.h"
+#include "../include/Shader.h"
 #include <iostream>
 
 /** @brief constructor of the shader class
@@ -15,16 +15,29 @@ Imports the functionality by getting the function pointers from the opengl (grap
 */
 void Shader::initializeOpenGLextensions()
 {
-  glCreateProgram = (PFNGLCREATEPROGRAMPROC)wglGetProcAddress("glCreateProgram");
-  glCreateShader = (PFNGLCREATESHADERPROC)wglGetProcAddress("glCreateShader");
-  glShaderSource = (PFNGLSHADERSOURCEPROC)wglGetProcAddress("glShaderSource");
-  glCompileShader = (PFNGLCOMPILESHADERPROC)wglGetProcAddress("glCompileShader");
-  glAttachShader = (PFNGLATTACHSHADERPROC)wglGetProcAddress("glAttachShader");
-  glLinkProgram = (PFNGLLINKPROGRAMPROC)wglGetProcAddress("glLinkProgram");
-  glUseProgram = (PFNGLUSEPROGRAMPROC)wglGetProcAddress("glUseProgram");
-  glGetShaderiv = (PFNGLGETSHADERIVPROC)wglGetProcAddress("glGetShaderiv");
-  glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)wglGetProcAddress("glGetShaderInfoLog");
-  glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)wglGetProcAddress("glGetObjectParameterivARB");
+#ifdef __linux__
+    glCreateProgram = (PFNGLCREATEPROGRAMPROC)glXGetProcAddress((const GLubyte *)"glCreateProgram");
+    glCreateShader = (PFNGLCREATESHADERPROC)glXGetProcAddress((const GLubyte *)"glCreateShader");
+    glShaderSource = (PFNGLSHADERSOURCEPROC)glXGetProcAddress((const GLubyte *)"glShaderSource");
+    glCompileShader = (PFNGLCOMPILESHADERPROC)glXGetProcAddress((const GLubyte *)"glCompileShader");
+    glAttachShader = (PFNGLATTACHSHADERPROC)glXGetProcAddress((const GLubyte *)"glAttachShader");
+    glLinkProgram = (PFNGLLINKPROGRAMPROC)glXGetProcAddress((const GLubyte *)"glLinkProgram");
+    glUseProgram = (PFNGLUSEPROGRAMPROC)glXGetProcAddress((const GLubyte *)"glUseProgram");
+    glGetShaderiv = (PFNGLGETSHADERIVPROC)glXGetProcAddress((const GLubyte *)"glGetShaderiv");
+    glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)glXGetProcAddress((const GLubyte *)"glGetShaderInfoLog");
+    glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)glXGetProcAddress((const GLubyte *)"glGetObjectParameterivARB");
+#else
+    glCreateProgram = (PFNGLCREATEPROGRAMPROC)wglGetProcAddress("glCreateProgram");
+    glCreateShader = (PFNGLCREATESHADERPROC)wglGetProcAddress("glCreateShader");
+    glShaderSource = (PFNGLSHADERSOURCEPROC)wglGetProcAddress("glShaderSource");
+    glCompileShader = (PFNGLCOMPILESHADERPROC)wglGetProcAddress("glCompileShader");
+    glAttachShader = (PFNGLATTACHSHADERPROC)wglGetProcAddress("glAttachShader");
+    glLinkProgram = (PFNGLLINKPROGRAMPROC)wglGetProcAddress("glLinkProgram");
+    glUseProgram = (PFNGLUSEPROGRAMPROC)wglGetProcAddress("glUseProgram");
+    glGetShaderiv = (PFNGLGETSHADERIVPROC)wglGetProcAddress("glGetShaderiv");
+    glGetShaderInfoLog = (PFNGLGETSHADERINFOLOGPROC)wglGetProcAddress("glGetShaderInfoLog");
+    glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)wglGetProcAddress("glGetObjectParameterivARB");
+#endif
 }
 
 /** @brief Checks the compilation status of a shader.
@@ -50,7 +63,7 @@ bool Shader::checkShaderCompilationStatus(GLhandleARB shaderObject) const
     delete compiler_log;
   }
 
-  if (compiled && (blen == 0)) { //if compilation was successful and if there are no error or warning messages (error string length == 0) 
+  if (compiled && (blen == 0)) { //if compilation was successful and if there are no error or warning messages (error string length == 0)
     return true;
   }
   else {

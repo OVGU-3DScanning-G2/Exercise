@@ -32,7 +32,7 @@
 #pragma comment(lib, "glu32.lib")        //link to some standard OpenGL convenience functions
 #pragma comment(lib, "GLFW/glfw3.lib")   //link against the the GLFW OpenGL SDK
 
-std::string filename = "../data/cone.xyz";
+std::string filename = "data/cone.xyz";
 
 //using namespace std; //everything what is in the "Standard" C++ namespace, so the "std::" prefix can be avoided
 
@@ -642,20 +642,38 @@ void action_shader()
 	std::cout << "Calculating normals..." << std::endl;
 	clock_t begin = clock();
 
-	for (int i = 0; i < points.size(); i++)
+	std::vector<Point3d*> shaderNeighboursPointer;
+	std::vector<Point3d> shaderNeighbours;
+	
+	int numOfPoints = points.size();
+	int counterP = 0;
+	std::cout << "Progress = " << counterP << "/" << numOfPoints; 
+	std::flush(std::cout);
+	for(Point3d& point : points)
 	{
 		Matrix M(3, 3);
-
-		computeCovarianceMatrix3x3(points, M);
+		
+		shaderNeighbours.clear();
+		shaderNeighboursPointer.clear();
+		shaderNeighboursPointer = data.getKNN(point, 10);
+		
+		for(Point3d* shaderPnt : shaderNeighboursPointer)
+		{
+			shaderNeighbours.emplace_back(*shaderPnt);
+		}
+		computeCovarianceMatrix3x3(shaderNeighbours, M);
 		SVD::computeSymmetricEigenvectors(M);
 
 		const Point3d kleinsterEigenVektor(M(0, 2), M(1, 2), M(2, 2));
 
 		pointsNormals.push_back(kleinsterEigenVektor);
+		
+		std::cout << "\rProgress = " << ++counterP << "/" << numOfPoints << "     ";
+		std::flush(std::cout);
 	}
 
 	clock_t end = clock();
-	std::cout << "Time needed to calculate Normals: " << double(end - begin) / CLOCKS_PER_SEC << "s\r" << std::endl;
+	std::cout << std::endl << "Time needed to calculate Normals: " << double(end - begin) / CLOCKS_PER_SEC << "s\r" << std::endl;
 
 	activeShader = true;
 }
@@ -666,47 +684,47 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	if (key == GLFW_KEY_1 && action == GLFW_RELEASE)
 	{
-		filename = "../data/cone.xyz";
+		filename = "data/cone.xyz";
 	}
 
 	if (key == GLFW_KEY_2 && action == GLFW_RELEASE)
 	{
-		filename = "../data/cap.xyz";
+		filename = "data/cap.xyz";
 	}
 
 	if (key == GLFW_KEY_3 && action == GLFW_RELEASE)
 	{
-		filename = "../data/Stanford Horse.xyz";
+		filename = "data/Stanford Horse.xyz";
 	}
 
 	if (key == GLFW_KEY_4 && action == GLFW_RELEASE)
 	{
-		filename = "../data/Stanford Bunny.xyz";
+		filename = "data/Stanford Bunny.xyz";
 	}
 
 	if (key == GLFW_KEY_5 && action == GLFW_RELEASE)
 	{
-		filename = "../data/Stanford Skeleton Hand.xyz";
+		filename = "data/Stanford Skeleton Hand.xyz";
 	}
 
 	if (key == GLFW_KEY_6 && action == GLFW_RELEASE)
 	{
-		filename = "../data/Stanford Dragon.xyz";
+		filename = "data/Stanford Dragon.xyz";
 	}
 
 	if (key == GLFW_KEY_7 && action == GLFW_RELEASE)
 	{
-		filename = "../data/Stanford Happy Buddha.xyz";
+		filename = "data/Stanford Happy Buddha.xyz";
 	}
 
 	if (key == GLFW_KEY_8 && action == GLFW_RELEASE)
 	{
-		filename = "../data/sphere.xyz";
+		filename = "data/sphere.xyz";
 	}
 
 	if (key == GLFW_KEY_9 && action == GLFW_RELEASE)
 	{
-		filename = "../data/sphere2.xyz";
+		filename = "data/sphere2.xyz";
 	}
 
 	if (key == GLFW_KEY_R && action == GLFW_RELEASE)

@@ -13,6 +13,8 @@
 #include <fstream>
 #endif
 
+#include "../include/Shader.h"
+
 #define GLFW_INCLUDE_GLU
 #include "GLFW/glfw3.h" //inlcude the function definition
 
@@ -30,7 +32,7 @@
 #pragma comment(lib, "glu32.lib")        //link to some standard OpenGL convenience functions
 #pragma comment(lib, "GLFW/glfw3.lib")   //link against the the GLFW OpenGL SDK
 
-std::string filename = "data/cone.xyz";
+std::string filename = "../data/cone.xyz";
 
 //using namespace std; //everything what is in the "Standard" C++ namespace, so the "std::" prefix can be avoided
 
@@ -61,6 +63,9 @@ std::vector<Point3d> abfrageColors;
 std::vector<Point3d> oldPoints;
 std::vector<Point3d> oldPointsColors;
 std::vector<Point3d> cornerPointsLine, cornerPointsPlane;
+
+Shader myShader;
+
 bool drawBestFitLine = false, drawBestFitPlane = false, doComputeBestFitLine = true, drawBestFitSphere = false,
 activeShader = false;
 double bestFitSphereRadius = 0;
@@ -171,6 +176,10 @@ void action_loadFile(GLFWwindow* window) {
 		m_camera.initializeCamera(m_sceneCenter, m_sceneRadius);  //set the camera outside the scene
 		m_camera.updateProjection();                              //adjust projection to window size
 
+
+		// initialize the shader
+		myShader.initializeOpenGLextensions();
+		myShader.createShaderProgram();
 																  //Farben der Punkte festlegen
 		setDefaultPointColors(pointsColors, points.size(), Point3d(0, 255, 0));
 }
@@ -657,47 +666,47 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
 
 	if (key == GLFW_KEY_1 && action == GLFW_RELEASE)
 	{
-		filename = "data/cone.xyz";
+		filename = "../data/cone.xyz";
 	}
 
 	if (key == GLFW_KEY_2 && action == GLFW_RELEASE)
 	{
-		filename = "data/cap.xyz";
+		filename = "../data/cap.xyz";
 	}
 
 	if (key == GLFW_KEY_3 && action == GLFW_RELEASE)
 	{
-		filename = "data/Stanford Horse.xyz";
+		filename = "../data/Stanford Horse.xyz";
 	}
 
 	if (key == GLFW_KEY_4 && action == GLFW_RELEASE)
 	{
-		filename = "data/Stanford Bunny.xyz";
+		filename = "../data/Stanford Bunny.xyz";
 	}
 
 	if (key == GLFW_KEY_5 && action == GLFW_RELEASE)
 	{
-		filename = "data/Stanford Skeleton Hand.xyz";
+		filename = "../data/Stanford Skeleton Hand.xyz";
 	}
 
 	if (key == GLFW_KEY_6 && action == GLFW_RELEASE)
 	{
-		filename = "data/Stanford Dragon.xyz";
+		filename = "../data/Stanford Dragon.xyz";
 	}
 
 	if (key == GLFW_KEY_7 && action == GLFW_RELEASE)
 	{
-		filename = "data/Stanford Happy Buddha.xyz";
+		filename = "../data/Stanford Happy Buddha.xyz";
 	}
 
 	if (key == GLFW_KEY_8 && action == GLFW_RELEASE)
 	{
-		filename = "data/sphere.xyz";
+		filename = "../data/sphere.xyz";
 	}
 
 	if (key == GLFW_KEY_9 && action == GLFW_RELEASE)
 	{
-		filename = "data/sphere2.xyz";
+		filename = "../data/sphere2.xyz";
 	}
 
 	if (key == GLFW_KEY_R && action == GLFW_RELEASE)
@@ -899,7 +908,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 
 															//draws the scene background
 		drawBackground();
-
+		
 		//draw points
 		//----------------------------------------------------------------------------
 		drawPoints(points, pointsColors, pointSize);
@@ -975,7 +984,7 @@ int main(int argc, char* argv[]) //this function is called, wenn ou double-click
 			glPopMatrix();
 		}
 		//----------------------------------------------------------------------------
-
+		
 		//draw coordinate axes
 		drawCoordinateAxes();
 
@@ -1004,18 +1013,19 @@ void drawPoints(std::vector<Point3d>& points, std::vector<Point3d>& pointColors,
 
 		if (activeShader)
 		{
+			myShader.bind();
 			glEnableClientState(GL_MODELVIEW_MATRIX);
 			glEnableClientState(GL_NORMAL_ARRAY);
 
 			glNormalPointer(GL_DOUBLE, sizeof(Point3d), &pointsNormals[0]);
-		}
+		} else {
+			glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &points[0]);
 
-		glVertexPointer(3, GL_DOUBLE, sizeof(Point3d), &points[0]);
-
-		if (!pointColors.empty())
+			if (!pointColors.empty())
 			glColorPointer(3, GL_DOUBLE, sizeof(Point3d), &pointColors[0]);
-		else
+			else
 			glColor3ub(0, 0, 0);
+		}
 
 		//draw point cloud
 		glDrawArrays(GL_POINTS, 0, (unsigned int)points.size());
@@ -1026,6 +1036,7 @@ void drawPoints(std::vector<Point3d>& points, std::vector<Point3d>& pointColors,
 		{
 			glDisableClientState(GL_MODELVIEW_MATRIX);
 			glDisableClientState(GL_NORMAL_ARRAY);
+			myShader.unbind();
 		}
 	}
 }

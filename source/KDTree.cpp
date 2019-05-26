@@ -1,22 +1,74 @@
-#include "include/KDTree.h"
+/*!
+   \file KDTree.cpp
+   \brief Implementation of KDTree object.
+*/
+
+#include "../include/KDTree.h"
 #include <random>
 static Point3d searchPoint;
 
+/**
+ * @brief      Compare points depending on their x value
+ *
+ * @param[in]  p1    The first point
+ * @param[in]  p2    The second point
+ *
+ * @return     p1.x < p2.x
+ */
 bool sortByXvalue(const Point3d& p1, const Point3d& p2)
 {
 	return p1.x < p2.x;
 }
 
+/**
+ * @brief      Compare points depending on their y value
+ *
+ * @param[in]  p1    The first point
+ * @param[in]  p2    The second point
+ *
+ * @return     p1.y < p2.y
+ */
 bool sortByYvalue(const Point3d& p1, const Point3d& p2)
 {
 	return p1.y < p2.y;
 }
 
+/**
+ * @brief      Compare points depending on their z value
+ *
+ * @param[in]  p1    The first point
+ * @param[in]  p2    The second point
+ *
+ * @return     p1.z < p2.z
+ */
 bool sortByZvalue(const Point3d& p1, const Point3d& p2)
 {
 	return p1.z < p2.z;
 }
 
+/**
+ * @brief      Compare two points depending on their ith value
+ *
+ * @param[in]  p1       The first point
+ * @param[in]  p2  		The second point
+ * @param[in]  dim      The dimension of the ith value
+ *
+ * @return     p1.{ith/dim} < p2.{ith/dim}
+ */
+bool sortByIthValue(const Point3d& p1, const Point3d& p2, const int dim)
+{
+	switch(dim)
+	{
+	case 0: return p1.x < p2.x;
+	case 1: return p1.y < p2.y;
+	case 2: return p1.z < p2.z;
+	}
+	return false;
+}
+
+/**
+ * @brief      Creating empty KDTree
+ */
 KDTree::KDTree()
 {
 	median = NULL;
@@ -24,6 +76,12 @@ KDTree::KDTree()
 	right = NULL;
 }
 
+/**
+ * @brief      Initializing KDTree recursivly
+ *
+ * @param      points  The points
+ * @param[in]  dim     The dimension to split at
+ */
 KDTree::KDTree(std::vector<Point3d>& points, int dim){
 	if (points.size() == 1)
 	{
@@ -74,6 +132,15 @@ KDTree::KDTree(std::vector<Point3d>& points, int dim){
 	}
 }
 
+/**
+ * @brief      Gets neighbouring points around input point with a maximal distance of laenge.
+ *
+ * @param[in]  laenge  Maximal distance to neighbouring points
+ * @param      point   Middle point
+ * @param[in]  dim     The dimension for the recursion. Initially 0
+ *
+ * @return     The neighbouring points.
+ */
 std::vector<Point3d*> KDTree::getRange(double laenge, Point3d& point, int dim)
 {
 	std::vector<Point3d*> res = std::vector<Point3d*>();
@@ -130,15 +197,30 @@ std::vector<Point3d*> KDTree::getRange(double laenge, Point3d& point, int dim)
 	return res;
 }
 
-
+/**
+ * @brief      Euclid distance between two points
+ *
+ * @param      p1    The first point
+ * @param      p2    The second point
+ *
+ * @return     { description_of_the_return_value }
+ */
 static double euclid(Point3d& p1, Point3d& p2)
 {
 	return sqrt(pow(p1.x - p2.x, 2) + pow(p1.y - p2.y, 2) + pow(p1.z - p2.z, 2));
 }
 
+/**
+ * @brief      Check vector contains searched point
+ *
+ * @param      p       Searched point
+ * @param      points  The vector points
+ *
+ * @return     If points contains p or not
+ */
 bool samePointInVector(Point3d& p, std::vector<Point3d>& points)
 {
-	for each (Point3d point in points)
+	for(Point3d point : points)
 	{
 		if (p == point)
 			return true;
@@ -147,7 +229,14 @@ bool samePointInVector(Point3d& p, std::vector<Point3d>& points)
 	return false;
 }
 
-
+/**
+ * @brief      Gets vector containing k nearest neighbours of a point
+ *
+ * @param      point  The point
+ * @param[in]  k      Number of nearest neighbour
+ *
+ * @return     The k nearest neighbours.
+ */
 std::vector<Point3d*> KDTree::getKNN(Point3d& point, int k)
 {
 	if (k < 1)
@@ -158,18 +247,33 @@ std::vector<Point3d*> KDTree::getKNN(Point3d& point, int k)
 
 	searchPoint = point;
 
-	std::vector<Point3d*> neighbours{&Point3d(DBL_MAX, DBL_MAX, DBL_MAX)};
+	std::vector<Point3d*> neighbours{new Point3d(DBL_MAX, DBL_MAX, DBL_MAX)};
 
 	getNN(point, neighbours, k, 0);
 
 	return neighbours;
 }
 
+/**
+ * @brief      Compare two points depending on their euclidean distance to the static searchpoint
+ *
+ * @param      p1    The first point
+ * @param      p2    The second point
+ *
+ * @return     True if p1 is closer to the searchpoint else false
+ */
 bool sortWithSearchPoint(Point3d* p1, Point3d* p2)
 {
 	return (euclid(*p1, searchPoint) < euclid(*p2, searchPoint));
 }
 
+/**
+ * @brief      Insert point to an vector and sort it by distance to the searchpoint
+ *
+ * @param      insertPoint  The inserted point
+ * @param      neighbours   The vector containing potentially neighbours
+ * @param[in]  k            Miximal number of neighbours
+ */
 void insertNeighbour(Point3d& insertPoint, std::vector<Point3d*>& neighbours, int k)
 {
 	neighbours.push_back(&insertPoint);
@@ -186,25 +290,25 @@ void KDTree::getNN(Point3d& point, std::vector<Point3d*>& neighbours, int k, int
 	//Rekursion nach unten
 	//----------------------
 	if (this == NULL)
-		return; //Rückgabe von Unendlich beim Ankommen vom Ende des KDTree
+		return; //Rï¿½ckgabe von Unendlich beim Ankommen vom Ende des KDTree
 
 	if (left == NULL && right == NULL)
 	{
 		if (point == *median)
 		{
-			return;													  //Rückgabe von Unendlich beim Ankommen vom
+			return;													  //RÃ¼ckgabe von Unendlich beim Ankommen vom
 																	  //Blatt des KDTree (Punkt ist angefragter Punkt)
 		}
 		else
 		{
 			insertNeighbour(*median, neighbours, k);
-			return; //Rückgabe des Punktes, wenn bei Blatt angekommen (nicht der angefragter Punkt)
+			return; //RÃ¼ckgabe des Punktes, wenn bei Blatt angekommen (nicht der angefragter Punkt)
 		}
 	}
 
 	bool goLeft = false;
 
-	switch (dim) //Überprüfung, ob nach links gegangen werden muss oder nach rechts
+	switch (dim) //ï¿½berprï¿½fung, ob nach links gegangen werden muss oder nach rechts
 	{
 	case 0:
 		if (point.x <= median->x) //X
@@ -224,11 +328,11 @@ void KDTree::getNN(Point3d& point, std::vector<Point3d*>& neighbours, int k, int
 
 	if (goLeft)
 	{
-		left->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des nähesten Punktes im linken Teil
+		left->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des nï¿½hesten Punktes im linken Teil
 	}
 	else
 	{
-		right->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des nähesten Punktes im rechten Teil
+		right->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des nï¿½hesten Punktes im rechten Teil
 	}
 	//----------------------
 
@@ -237,7 +341,7 @@ void KDTree::getNN(Point3d& point, std::vector<Point3d*>& neighbours, int k, int
 	double maxMinDist = euclid(*(neighbours.back()), point); //Distanz zwischen ermitteltem Punkt und angefragten Punkt
 	bool oldGoLeft = goLeft;
 
-	switch(dim) //Überprüfung ob es Punkte im anderen Teilbaum gibt, die näher seien könnten
+	switch(dim) //ï¿½berprï¿½fung ob es Punkte im anderen Teilbaum gibt, die nï¿½her seien kï¿½nnten
 	{
 	case 0:
 		if (abs(median->x - point.x) <= maxMinDist) //X
@@ -259,32 +363,39 @@ void KDTree::getNN(Point3d& point, std::vector<Point3d*>& neighbours, int k, int
 		break;
 	}
 
-	if (oldGoLeft != goLeft) //Ermittlung des Punkte im anderen Teilbaums der dem angefragten Punkt am nächsten ist
+	if (oldGoLeft != goLeft) //Ermittlung des Punkte im anderen Teilbaums der dem angefragten Punkt am nï¿½chsten ist
 	{
 		//Point3d otherBranchPoint;
 
 		if (goLeft)
 		{
-			left->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des Punktes für den linken Teilbaum
+			left->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des Punktes fï¿½r den linken Teilbaum
 		}
 		else
 		{
-			right->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des Punktes für den rechten Teilbaum
+			right->getNN(point, neighbours, k, (dim + 1) % 3); //Ermittlung des Punktes fï¿½r den rechten Teilbaum
 		}
 
 		//if (euclid(otherBranchPoint, point) < euclid(actual, point) && !samePointInVector(otherBranchPoint, neighbours))
-		//	actual = otherBranchPoint; //Übernahme des Punktes, wenn er näher ist als der andere
+		//	actual = otherBranchPoint; //ï¿½bernahme des Punktes, wenn er nï¿½her ist als der andere
 	}
 
 	if (euclid(*median, point) < maxMinDist && !(*median == point))
-		insertNeighbour(*median, neighbours, k); //Übernhame des Medians, sollte dieser noch näher dran sein
+		insertNeighbour(*median, neighbours, k); //ï¿½bernhame des Medians, sollte dieser noch nï¿½her dran sein
 
 	//inserNeighbour(actual, neighbours, k);
-	return; //Übergabe des ermittelten Wertes
+	return; //ï¿½bergabe des ermittelten Wertes
 	//----------------------
 }
 
-
+/**
+ * @brief      Smoothing the pointcloud in correlation to their nth nearest neighbours
+ *
+ * @param      points    Pointcloud
+ * @param[in]  strength  Nth nearest neighbour for smoothing
+ *
+ * @return     Smoothed pointcloud
+ */
 std::vector<Point3d> KDTree::smooth(std::vector<Point3d>& points, int strength)
 {
 	std::vector<Point3d> newPoints;
@@ -309,11 +420,11 @@ std::vector<Point3d> KDTree::smooth(std::vector<Point3d>& points, int strength)
 			sumGewichte += gewicht;
 		}
 
-		newX += points[i].x;
-		newY += points[i].y;
-		newZ += points[i].z;
+		//newX += points[i].x;
+		//newY += points[i].y;
+		//newZ += points[i].z;
 
-		sumGewichte++;
+		//sumGewichte++;
 
 		Point3d newPoint = Point3d(newX / sumGewichte, newY / sumGewichte, newZ / sumGewichte);
 		newPoints.emplace_back(newPoint);
@@ -326,9 +437,14 @@ std::vector<Point3d> KDTree::smooth(std::vector<Point3d>& points, int strength)
 	return newPoints;
 }
 
+/**
+ * @brief      Thins points of the kdtree out
+ *
+ * @param[in]  strength  The strength: k-nearest neighbours will be thinned out
+ */
 void KDTree::thinning(int strength)
 {
-	//Diese Methode ist fehlerhaft (Springt für jeden Punkt rein, bis auf einen???, obwohl diese im KDTree richtig markiert werden)
+	//Diese Methode ist fehlerhaft (Springt fï¿½r jeden Punkt rein, bis auf einen???, obwohl diese im KDTree richtig markiert werden)
 	/*for (int i = 0; i < points.size(); i++)
 	{
 		if (points[i].thinned == false)
@@ -363,6 +479,11 @@ void KDTree::thinning(int strength)
 	right->thinning(strength);
 }
 
+/**
+ * @brief      Gets not thinned out points.
+ *
+ * @return     Not thinned out points.
+ */
 std::vector<Point3d> KDTree::getNotThinnedPoints()
 {
 	std::vector<Point3d> res;

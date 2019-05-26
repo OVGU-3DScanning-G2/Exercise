@@ -1,4 +1,4 @@
-#include "include/MainWindow.h"
+#include "../include/MainWindow.h"
 
 #include <fstream>
 #include <QtWidgets/QMenuBar>
